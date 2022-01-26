@@ -1,0 +1,4 @@
+uart_2ndstage=1
+arm_64bit=1
+kernel_address=0x80000
+core_freq_min=500
