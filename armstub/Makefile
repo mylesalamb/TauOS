@@ -5,12 +5,14 @@ include ${BUILD_ROOT}/rules.mk
 EXEC_IMG=${OBJ_DIR}/armstub.bin
 EXEC_ELF=${OBJ_DIR}/armstub.elf
 
+LINKER_DIR=${SRC_DIR}/config
 
 all: ${EXEC_IMG}
 
 ${EXEC_IMG}: ${EXEC_ELF}
 	${OC} $^ -O binary $@
 
-${EXEC_ELF}: ${BUILD_DIR}/linker.ld ${SUBSYSTEMS} ${O_FILES}
-	${CC} -T $< -o $@ ${C_FLAGS} $(shell find ${OBJ_DIR} -type f -name "*.o") ${L_FLAGS}
+${EXEC_ELF}: ${LINKER_DIR}/linker.ld ${O_FILES}
+	${LD} --section-start=.text=0 -o $@ $(shell find ${OBJ_DIR} -type f -name "*.o") 
+
 
