@@ -45,7 +45,3 @@ void bmain()
         muart_writes("[BOOT] Copy done, jump to loaded, kernel\n");
 }
 
-void bother()
-{
-        muart_writes("Write some other stuff\n");
-}

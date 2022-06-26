@@ -50,7 +50,6 @@ bss_loop_end:
 
         /* Relative branch as we jumped to the relocated code */
         bl bmain
-        bl bother
         mov x0, x10
         mov x1, x11
         mov x2, x12
