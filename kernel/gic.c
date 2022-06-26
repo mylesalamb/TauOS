@@ -14,5 +14,5 @@ void gic_init(u64 base_addr)
 
 struct gic_regs *gic_get()
 {
-        return gic_dev;
+        return &gic_dev;
 }

@@ -1,8 +1,10 @@
-all: kernel armstub
+all: kernel armstub bootloader
 
-.PHONY: kernel armstub clean
+.PHONY: kernel bootloader armstub clean
 kernel:
 	$(MAKE) all -C kernel/
+bootloader:
+	$(MAKE) all -C bootloader/
 armstub: 
 	$(MAKE) all -C armstub/
 
