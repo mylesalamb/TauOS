@@ -83,7 +83,6 @@ int copy_to_dev(int dev, int file)
         {
                 // Lowest order bytes first
                 char chunk = (sz >> (8*i)) & 0xFF;
-                printf("Computed chunk as %d\n", chunk);
                 if(write(dev, &chunk, 1) < 0)
                 {
                         panic("Write behaved unexpectadly\n");
@@ -103,7 +102,7 @@ int copy_to_dev(int dev, int file)
                 panic("Did not recieve an ack for size, got: %d\n", resp);
         }
 
-        printf("Communicated size to remote, send file\n");
+        printf("[HOST] Communicated size to remote, send file\n");
 
         while(remaining )
         {
@@ -121,7 +120,7 @@ int copy_to_dev(int dev, int file)
                 remaining--; 
                 progress(sz - remaining, sz);
         }
-        printf("\nFinished sending\n");
+        printf("\n[HOST] Finished sending\n");
         char fin = FIN;
         if(write(dev, &fin, 1) <= 0)
         {
@@ -134,7 +133,6 @@ int copy_to_dev(int dev, int file)
 
 int main(int argc, char *argv[])
 {
-        int active = 1;
         char *kernel = NULL;
         char *dev = DEV;
         struct termios dios;

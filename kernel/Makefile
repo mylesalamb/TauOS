@@ -12,13 +12,14 @@ EXEC_ELF=${OBJ_DIR}/kernel8.elf
 all: $(SUBSYSTEMS) ${EXEC_IMG}
 
 ${EXEC_IMG}: ${EXEC_ELF}
-	${OC} $^ -O binary $@
+	@echo "[OC] $@"
+	@${OC} $^ -O binary $@
 
 ${EXEC_ELF}: ${LINKER_DIR}/linker.ld ${SUBSYSTEMS} ${O_FILES}
-	${CC} -T $< -o $@ ${C_FLAGS} $(shell find ${OBJ_DIR} -type f -name "*.o") ${L_FLAGS}
+	@echo "[LD] $@"
+	@${CC} -T $< -o $@ ${C_FLAGS} $(shell find ${OBJ_DIR} -type f -name "*.o") ${L_FLAGS}
 
 .PHONY: $(SUBSYSTEMS)
 $(SUBSYSTEMS):
-	@echo $(SUBSYSTEMS)
-	$(MAKE) all -C $@
+	@$(MAKE) all -C $@
 
