@@ -6,13 +6,6 @@
 #include <lib/common.h>
 
 
-void (*_io_dev)(char) = muart_writec;
-
-void io_init(void (*dev)(char))
-{
-        _io_dev = dev;
-}
-
 void io_ptout(void *ptr)
 {
 
@@ -77,6 +70,34 @@ void io_stout(void (*dev)(char), char *str)
 
 u64 vcprintk(void (*dev)(char), const char *fmt, va_list va)
 {
+        u64 retval;
+        char buff[128];
+        retval = vsprintf(fmt, buff, va);
+        
+}
+
+u64 cprintk(void (*dev)(char), const char *fmt, ...)
+{
+        u64 retval;
+        va_list va;
+        va_start(va, fmt);
+        retval = vcprintk(dev, fmt, va);
+        va_end(va);
+        return retval;
+}
+
+u64 printk(const char *fmt, ...)
+{
+        u64 retval;
+        va_list va;
+        va_start(va, fmt);
+        retval = vcprintk(_io_dev, fmt, va);
+        va_end(va);
+        return retval;
+}
+
+u64 vsprintf(const char *fmt, char *dst, va_list va)
+{
 
         while(*fmt)
         {
@@ -115,32 +136,27 @@ u64 vcprintk(void (*dev)(char), const char *fmt, va_list va)
                                         fmt++;
                                         break;
                         }
+
                 }
                 else
                 {
-                        muart_writec(*fmt);
+                        *dst = *fmt;
+                        dst++;
                         fmt++;
                 }
+
         }
-        return 0;
+
 }
 
-u64 cprintk(void (*dev)(char), const char *fmt, ...)
+u64 sprintf(const char *fmt, char *dst, ...)
 {
         u64 retval;
         va_list va;
         va_start(va, fmt);
-        retval = vcprintk(dev, fmt, va);
+        retval = vsprintf(fmt, dst, va);
         va_end(va);
         return retval;
+
 }
 
-u64 printk(const char *fmt, ...)
-{
-        u64 retval;
-        va_list va;
-        va_start(va, fmt);
-        retval = vcprintk(_io_dev, fmt, va);
-        va_end(va);
-        return retval;
-}

@@ -4,6 +4,10 @@
 #include <stdarg.h>
 #include <types.h>
 
+struct console 
+{
+        (*writes)(char *);
+};
 
 void io_init(void (*)(char));
 u64 cprintk( void(*)(char), const char *, ...);

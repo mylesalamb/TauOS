@@ -120,24 +120,23 @@ ureg32 *mb_get_buff()
         return mb_buff;
 }
 
-u32 mb_get_board_model()
+u32 mb_generic_command(u32 mbox_cmd, u32 size, u32 code, void *value, u32 value_sz)
 {
         struct mbox_hdr *hdr;
         u32 *end;
         hdr = mb_fmt_hdr(mb_buff, 0);
-        end = mb_append_tag((u32 *)hdr->tags, MBOX_BOARD_REV, 4, 0, NULL, 0);
+        end = mb_append_tag((u32 *)hdr->tags, mbox_cmd, size, code, value, value_sz);
         mb_finalize_msg(hdr, end);
         mb_send(hdr, MBOX_ARM_TO_VC);
 
         hdr = (struct mbox_hdr *)mb_recv(MBOX_ARM_TO_VC);
         struct mbox_tag *csr = (struct mbox_tag *)hdr->tags;
-        printk("message size: %h\nmessage code: %h\n", hdr->size, hdr->code);
-        if(csr->id != MBOX_BOARD_REV) {
-                printk("Not board model tag! abort\n");
-                return 0;
+        if(csr->id != mbox_cmd) {
+                printk("Did not get expected mbox_tag back\n");
+                return 1;
         }
-        printk("tag size %h\ntag code %h\n", csr->size, csr->code);
-        return *(ureg32 *)(csr->value);
+        memcpy(csr->value, value, csr->size);
+        return 0;
 
 }
 

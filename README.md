@@ -20,14 +20,23 @@ To then build the operating system run.
 ./build.sh os 
 ```
 
-To then transfer the kernal to an SD card run.
+To then transfer the bootloader/kernel to an SD card run.
 
 ```
-sudo ./build sd $DEV
+sudo ./build.sh sd $DEV
 ```
 
 where `$DEV` represents the name of the SD device's boot partition. This value
 defaults to `mmcblk0p1`.
+
+To then run the uart-boot loader run
+
+```
+sudo ./build.sh chain
+```
+
+You can then power on the device, and the previously built kernel will be loaded to the Pi's memory
+and will be executed.
 
 
 ## Design Decisions
@@ -41,8 +50,9 @@ TODO
 - [x] Framebuffer / HDMI output
 - [x] Drop to EL1 (non-secure)
 - [x] IRQ Setup
+- [x] 3rd Stage bootloader
 - [ ] GIC-400 Setup
 - [ ] DMA controller Setup
-- [ ] Arsan sd controller setup + Minimal FAT32 FS driver
+- [ ] EMMC2 sd controller setup + Minimal FAT32 FS driver
 - [ ] MMU initialisation
 - [ ] PMM -> VMM allocator stack
