@@ -4,14 +4,16 @@
 #include <drv/muart.h>
 #include <lib/io.h>
 #include <lib/common.h>
+#include <lib/string.h>
 
+static struct console *_io_dev;
 
-void io_ptout(void *ptr)
+void io_init(struct console *c)
 {
-
+        _io_dev = c;
 }
 
-void io_dtout(void (*dev)(char), i64 num)
+char *itoa(i64 num, char *dst)
 {
         u8 nve = 0;
         char *decnums = "0123456789";
@@ -21,7 +23,7 @@ void io_dtout(void (*dev)(char), i64 num)
                 nve = 1;
                 num *= -1;
         }
-        for(int i = ARRAY_SZ(str) - 2; i-- > 0; )
+        for(int i = ARRAY_SZ(str) - 2; i >= 0; i-- )
         {
                 u8 digit = num % 10;
                 num /= 10;
@@ -29,16 +31,16 @@ void io_dtout(void (*dev)(char), i64 num)
                 if(digit)
                         last = i;
         }
-        muart_writes(str + last);
+        return strcpy(str + last, dst);
 }
 
-void io_utout(void (*dev)(char), u64 num)
+char *utoa(u64 num, char *dst)
 {
         char *decnums = "0123456789";
         char str[22] = {'\0'};
 
-        u64 last = ARRAY_SZ(str) - 3;
-        for(int i = ARRAY_SZ(str) - 2; i-- > 0; )
+        u64 last = ARRAY_SZ(str) - 2;
+        for(int i = ARRAY_SZ(str) - 2; i >= 0; i--)
         {
                 u8 digit = num % 10;
                 num /= 10;
@@ -46,43 +48,95 @@ void io_utout(void (*dev)(char), u64 num)
                 if(digit)
                         last = i;
         }
-        muart_writes(str + last);
+
+        return strcpy(str + last, dst);
+
 }
 
-void io_htout(void (*dev)(char), u64 num)
+char *htoa(u64 num, char *dst)
 {
         char *hexnums = "0123456789ABCDEF";
         /* u64 == 16 hex digits + header + null */
         char str[19] = {'0', 'x'};
-        for(int i = (sizeof(str)/sizeof(char)) - 1; i > 1; i-- )
+        for(int i = ARRAY_SZ(str) - 2; i > 1; i-- )
         {
                 u8 digit = num & 0xf;
                 num >>= 4;
                 str[i] = hexnums[digit];
         }
-        muart_writes(str);
+        return strcpy(str, dst);
 }
 
-void io_stout(void (*dev)(char), char *str)
+char *stos(char *src, char *dst)
 {
-        muart_writes(str);
+        /* Basically a memcpy that returns the end of the string */
+        return strcpy(src, dst);
 }
 
-u64 vcprintk(void (*dev)(char), const char *fmt, va_list va)
+u64 vsprintf(char *dst, const char *fmt, va_list va)
+{
+
+        while(*fmt)
+        {
+                if(*fmt == '%')
+                {
+                        fmt++;
+                        switch(*fmt)
+                        {
+                                case 's':
+                                        fmt++;
+                                        dst = stos(va_arg(va, char*), dst);
+                                        break;
+                                case 'p':
+                                        fmt++;
+                                        dst = htoa((u64)va_arg(va, void *), dst);
+                                        break;
+                                case 'd':
+                                        fmt++;
+                                        dst = itoa(va_arg(va, i64), dst);
+                                        break;
+                                case 'u':
+                                        fmt++;
+                                        dst = utoa(va_arg(va, u64), dst);
+                                        break;
+                                case 'c':
+                                        fmt++;
+                                        char c = va_arg(va, u64);
+                                        *dst = c;
+                                        dst++;
+                                        *dst = '\0';
+                                        break;
+                                case 'h':
+                                        fmt++;
+                                        dst = htoa(va_arg(va, u64), dst);
+                                        break;
+                                case '%':
+                                        *dst = *fmt;
+                                        fmt++;
+                                        dst++;
+                                        *dst = '\0';
+                                        break;
+                        }
+
+                }
+                else
+                {
+                        *dst = *fmt;
+                        dst++;
+                        fmt++;
+                }
+
+        }
+        return 0;
+
+}
+
+u64 vcprintk(struct console *c, const char *fmt, va_list va)
 {
         u64 retval;
-        char buff[128];
-        retval = vsprintf(fmt, buff, va);
-        
-}
-
-u64 cprintk(void (*dev)(char), const char *fmt, ...)
-{
-        u64 retval;
-        va_list va;
-        va_start(va, fmt);
-        retval = vcprintk(dev, fmt, va);
-        va_end(va);
+        char buff[128] = {0};
+        retval = vsprintf(buff, fmt, va);
+        c->writes(buff);
         return retval;
 }
 
@@ -96,67 +150,24 @@ u64 printk(const char *fmt, ...)
         return retval;
 }
 
-u64 vsprintf(const char *fmt, char *dst, va_list va)
-{
-
-        while(*fmt)
-        {
-                if(*fmt == '%')
-                {
-                        fmt++;
-                        switch(*fmt)
-                        {
-                                case 's':
-                                        fmt++;
-                                        io_stout(dev, va_arg(va, char*));
-                                        break;
-                                case 'p':
-                                        fmt++;
-                                        io_htout(dev, (u64)va_arg(va, void *));
-                                        break;
-                                case 'd':
-                                        fmt++;
-                                        i64 n = va_arg(va, i64);
-                                        break;
-                                case 'u':
-                                        fmt++;
-                                        io_utout(dev, va_arg(va, u64));
-                                        break;
-                                case 'c':
-                                        fmt++;
-                                        char c = va_arg(va, u64);
-                                        dev(c);
-                                        break;
-                                case 'h':
-                                        fmt++;
-                                        io_htout(dev, va_arg(va, u64));
-                                        break;
-                                case '%':
-                                        dev(*fmt);
-                                        fmt++;
-                                        break;
-                        }
-
-                }
-                else
-                {
-                        *dst = *fmt;
-                        dst++;
-                        fmt++;
-                }
-
-        }
-
-}
-
-u64 sprintf(const char *fmt, char *dst, ...)
+u64 cprintk(struct console *c, const char *fmt, ...)
 {
         u64 retval;
         va_list va;
         va_start(va, fmt);
-        retval = vsprintf(fmt, dst, va);
+        retval = vcprintk(c, fmt, va);
         va_end(va);
         return retval;
+}
 
+
+u64 sprintf(char *dst, const char *fmt, ...)
+{
+        u64 retval;
+        va_list va;
+        va_start(va, fmt);
+        retval = vsprintf(dst, fmt, va);
+        va_end(va);
+        return retval;
 }
 

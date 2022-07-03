@@ -6,11 +6,12 @@
 
 struct console 
 {
-        (*writes)(char *);
+        void (*writes)(char *);
 };
 
-void io_init(void (*)(char));
-u64 cprintk( void(*)(char), const char *, ...);
+void io_init(struct console *);
+u64 cprintk(struct console *, const char *, ...);
 u64 printk(const char *, ...);
+u64 sprintf(char *, const char *, ...);
 
 #endif

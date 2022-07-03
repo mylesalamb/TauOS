@@ -2,6 +2,7 @@
 #include <gpio.h>
 #include <aux.h>
 #include <drv/muart.h>
+#include <lib/io.h>
 
 #define MUART_FN        gf_alt5
 #define MUART_RXD0      15
@@ -15,6 +16,11 @@ void delay(u64 n)
 }
 
 void muart_writec(char);
+void muart_writes(char *);
+
+struct console muart_console = {
+        .writes = muart_writes
+};
 
 void muart_init()
 {

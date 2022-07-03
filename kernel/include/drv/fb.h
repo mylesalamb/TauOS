@@ -1,6 +1,8 @@
 #ifndef FB_H
 #define FB_H 1
 
+#include <lib/io.h>
+
 enum fb_pallete {
         FB_BLACK   = 0x00,
         FB_WHITE   = 0x01,
@@ -11,6 +13,8 @@ enum fb_pallete {
         FB_MAGENTA = 0x06,
         FB_CYAN    = 0x07,
 };
+
+extern struct console fb_console;
 
 void fb_init();
 void fb_writec(char c);

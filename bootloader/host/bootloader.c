@@ -28,7 +28,7 @@ int tio_set = 0;
 
 void sig_cb(int signum)
 {
-        printf("Caught signal: %s\n", strsignal(signum));
+        printf("[HOST] Caught signal: %s\n", strsignal(signum));
         if(tio_set)
         {
                 tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
@@ -54,12 +54,12 @@ int progress(uint64_t curr, uint64_t max)
         printf("\r");
         fflush(stdout);
 
-        printf(" %10lu / %lu", curr, max);
+        printf("[HOST] (%6.2f%%) %10lu / %lu", ((double)curr/max) * 100, curr, max);
 
         return 0;
 }
 
-int copy_to_dev(int dev, int file)
+int copy_to_dev(int dev, char *kernel)
 {
         /* Copy the actual kernel to the device */
         /* We assume that the device is ready to recieve */
@@ -67,6 +67,7 @@ int copy_to_dev(int dev, int file)
         /* From the remote */
         uint64_t sz, remaining;
         struct stat file_info;
+        int file = open(kernel, O_RDONLY);
         if(dev < 0 || file < 0)
                 panic("Handle to copy is invalid\n");
 
@@ -75,8 +76,8 @@ int copy_to_dev(int dev, int file)
         sz = file_info.st_size;
         remaining = sz;
 
-        printf("File size is %lu\n", sz);
-        printf("Send file size to remote\n");
+        printf("[HOST] File size is %lu\n", sz);
+        printf("[HOST] Send file size to remote\n");
 
         char resp;
         for(int i = 0; i < sizeof(sz); i++)
@@ -85,6 +86,7 @@ int copy_to_dev(int dev, int file)
                 char chunk = (sz >> (8*i)) & 0xFF;
                 if(write(dev, &chunk, 1) < 0)
                 {
+                        close(file);
                         panic("Write behaved unexpectadly\n");
                 }
         }
@@ -95,10 +97,12 @@ int copy_to_dev(int dev, int file)
 
         if(ret < 0)
         {
+                close(file);
                 panic("Read behaved unexpectadly\n");
         }
         if(resp != ACK)
         {
+                close(file);
                 panic("Did not recieve an ack for size, got: %d\n", resp);
         }
 
@@ -110,11 +114,12 @@ int copy_to_dev(int dev, int file)
                 char byte;
                 if(read(file, &byte, 1) <= 0)
                 {
+                        close(file);
                         panic("read behaved unexpectadly\n");
                 }
                 if(write(dev, &byte, 1) <= 0)
                 {
-
+                        close(file);
                         panic("write behaved unexpectadly\n");
                 }
                 remaining--; 
@@ -124,10 +129,11 @@ int copy_to_dev(int dev, int file)
         char fin = FIN;
         if(write(dev, &fin, 1) <= 0)
         {
-
+                close(file);
                 panic("write behaved unexpectadly\n");
         }
 
+        close(file);
         return 0;
 }
 
@@ -184,11 +190,6 @@ int main(int argc, char *argv[])
                 panic("Input is not a tty, dont use this in a pipeline\n");
         }
 
-        int kfd = open(kernel, O_RDONLY);
-        if(kfd < 0)
-        {
-                panic("Failed to get kernel handle, errno: %s\n", strerror(errno));
-        }
 
 
         if(tcgetattr(STDIN_FILENO, &old_tio))
@@ -292,10 +293,10 @@ int main(int argc, char *argv[])
                         }
                         if(c == BRK)
                         {
-                                printf("Recieved break\n");
                                 marker++;
                                 if(marker == 3){
-                                        copy_to_dev(dfd, kfd);
+                                        printf("[HOST] Prepare to send kenrel to host\n");
+                                        copy_to_dev(dfd, kernel);
                                         marker = 0;
                                 }
                         }

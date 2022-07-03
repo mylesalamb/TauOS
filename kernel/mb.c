@@ -135,7 +135,7 @@ u32 mb_generic_command(u32 mbox_cmd, u32 size, u32 code, void *value, u32 value_
                 printk("Did not get expected mbox_tag back\n");
                 return 1;
         }
-        memcpy(csr->value, value, csr->size);
+        memcpy((void *)csr->value, value, csr->size);
         return 0;
 
 }

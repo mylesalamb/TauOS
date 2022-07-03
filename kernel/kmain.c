@@ -21,9 +21,10 @@ void kinit(void *dtb)
         gpio_init(PHYS_BASE_ADDR);
         mb_init(PHYS_BASE_ADDR);
         /* io_init needs to come first here */
-        io_init(muart_writec);
+        io_init(&muart_console);
         muart_init();
         fb_init();
+        io_init(&fb_console);
         printk("Kernel initialisation tasks done!\n");
         kmain();
 }

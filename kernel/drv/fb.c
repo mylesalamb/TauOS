@@ -24,6 +24,11 @@ const u32 color_pallete[] = {
        [FB_MAGENTA] = 0x00ff00ff,
        [FB_CYAN]    = 0x0000ffff
 };
+void fb_writes(char *);
+
+struct console fb_console = {
+        .writes = fb_writes
+};
 
 void fb_init()
 {
