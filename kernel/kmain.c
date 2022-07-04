@@ -6,6 +6,7 @@
 #include <drv/muart.h>
 #include <drv/fb.h>
 #include <lib/io.h>
+#include <gic.h>
 
 // As visible to the arm
 #define PHYS_BASE_ADDR 0xFE000000
@@ -20,6 +21,7 @@ void kinit(void *dtb)
         aux_init(PHYS_BASE_ADDR);
         gpio_init(PHYS_BASE_ADDR);
         mb_init(PHYS_BASE_ADDR);
+        gic_init(PHYS_BASE_ADDR);
         /* io_init needs to come first here */
         io_init(&muart_console);
         muart_init();
@@ -34,6 +36,7 @@ void kmain()
         printk("Booted to TauOS kernel!\n\n");
         irq_init_vectors();
         printk("Installed IDT\n");
+        gic_dump_regs();
         while(1)
                 ;
 }
