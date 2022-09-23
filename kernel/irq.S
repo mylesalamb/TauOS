@@ -1,6 +1,8 @@
 .section ".text"
 
 .globl irq_init_vectors
+.globl irq_enable
+.globl irq_disable
 
 .macro irq_entry handle
         b \handle
@@ -9,6 +11,8 @@
 
 // Store register context 
 // Leaving a ptr to struct to register context in x0
+// This should be an expected argument for each type of reciever that we define
+// in the higher level C functions
 .macro irq_store_ctx
         sub sp,  sp,  #(18 * 8 * 2) // 31 general purpose + EL1 config registers
         stp x0,  x1,  [sp, #(0 * 8 * 2)]
@@ -74,34 +78,55 @@ irq_init_vectors:
         ret
 
 
-_irq_stub:
+// For each type of interrupt that occurs
+// define a handover to a higher level function
+// to handle the event with the irq_ctx
+.macro irq_block rcver
         irq_store_ctx
-        bl exception_handler
+        bl \rcver
         b irq_restore_ctx
+.endm
+
+se_stub:
+        irq_block se_rcver
+
+irq_stub:
+        irq_block irq_rcver
+
+fiq_stub:
+        irq_block fiq_rcver
+
+ser_stub:
+        irq_block ser_rcver
+
+// Undefined stub, for things
+// I havent implemented yet
+ud_stub:
+        irq_block ud_rcver
 
 .balign 2048
 _irq_table:
         // Current exception level using EL0 stack pointer
-        irq_entry _irq_stub // se
-        irq_entry _irq_stub // irq 
-        irq_entry _irq_stub // fiq 
-        irq_entry _irq_stub // ser 
+        irq_entry ud_stub // se
+        irq_entry ud_stub // irq 
+        irq_entry ud_stub // fiq 
+        irq_entry ud_stub // ser 
 
-        // Current exception level, using EL1 stack pointer
-        irq_entry _irq_stub // se  
-        irq_entry _irq_stub // irq 
-        irq_entry _irq_stub // fiq 
-        irq_entry _irq_stub // ser 
+        // Current exception level, using ELx stack pointer
+        irq_entry se_stub // se  
+        irq_entry irq_stub // irq 
+        irq_entry fiq_stub // fiq 
+        irq_entry ser_stub // ser 
 
         // Lower exception level in aarch64
-        irq_entry _irq_stub // se  
-        irq_entry _irq_stub // irq 
-        irq_entry _irq_stub // fiq 
-        irq_entry _irq_stub // ser 
+        irq_entry ud_stub // se  
+        irq_entry ud_stub // irq 
+        irq_entry ud_stub // fiq 
+        irq_entry ud_stub // ser 
 
         // Lower exception level in aarch32
-        irq_entry _irq_stub // se  
-        irq_entry _irq_stub // irq 
-        irq_entry _irq_stub // fiq 
-        irq_entry _irq_stub // ser 
+        irq_entry ud_stub // se  
+        irq_entry ud_stub // irq 
+        irq_entry ud_stub // fiq 
+        irq_entry ud_stub // ser 
 

@@ -41,7 +41,12 @@ and will be executed.
 
 ## Design Decisions
 
-TODO
+As this operating system will realistically only ever target one board, the
+Raspberry Pi 4b, I will probably develop it as a monolithic kernel. As the hardware
+fixed. Maybe I'll port it to the Raspberry Pi 5, whenever that comes out.
+
+I have a SPI ethernet board which is much easier to program than the PCI ethernet
+on the board, so networking is something that I will also work on.
 
 ## Roadmap
 
@@ -51,8 +56,18 @@ TODO
 - [x] Drop to EL1 (non-secure)
 - [x] IRQ Setup
 - [x] 3rd Stage bootloader
-- [ ] GIC-400 Setup
+- [x] GIC-400 Setup
+- [x] Timer interrupts
 - [ ] DMA controller Setup
-- [ ] EMMC2 sd controller setup + Minimal FAT32 FS driver
+- [ ] EMMC2 sd controller setup 
+- [ ] Minimal FAT32 FS driver
+- [ ] SPI Ethernet (ENC28J60)
 - [ ] MMU initialisation
-- [ ] PMM -> VMM allocator stack
+- [ ] PMM -> VMM allocator stack (kmalloc, kcalloc, kpalloc, upalloc...)
+- [ ] User processes
+
+## Dependencies
+
+* BASH, other shells will probably work as well
+* GNU Make, I use some GNU specific stuff so other varients of Make will probably not work
+* ARM cross-compiler, although you can get that through `./build.sh toolchain`

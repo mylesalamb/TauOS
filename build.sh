@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 
 # Cross compiler should be on the path so we can use the commands normally
-export BUILD_ROOT=`pwd`
+BUILD_ROOT=`pwd`
 CC_DIR="gcc-arm-10.3-2021.07-x86_64-aarch64-none-elf"
 CROSS_CC="${BUILD_ROOT}/${CC_DIR}/bin"
-export PATH=$CROSS_CC:$PATH
-
+PATH=$CROSS_CC:$PATH
 COMPILER_SRC="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-a/10.3-2021.07/binrel/${CC_DIR}.tar.xz"
+
+export BUILD_ROOT
+export PATH
+
+_DEFAULT_OS_TARGET='all'
+_DEFAULT_SD_TARGET='mmcblk0p1'
+
 
 sync_sd () {
         mount /dev/$1 /tmp/mnt
@@ -33,13 +39,13 @@ main() {
                         tar -xvf $CC_DIR.tar.xz
                         ;;
                 "os")
-                        make ${all:-$1} -{r,R}
+                        make ${1:-$_DEFAULT_OS_TARGET} -{r,R}
                         ;;
                 "chain")
                         boot_from_host
                         ;;
                 "sd")
-                        sync_sd ${mmcblk0p1:-$1}
+                        sync_sd ${1:-$_DEFAULT_SD_TARGET}
                         ;;
         esac
 }

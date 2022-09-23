@@ -32,7 +32,7 @@ void muart_init()
         struct aux_regs *aux = aux_get();
         aux->AUX_ENABLES = MUART_ENABLE;
         aux->AUX_MU_CNTL_REG = 0;
-        aux->AUX_MU_IER_REG = 0;
+        aux->AUX_MU_IER_REG = 0x0;
         aux->AUX_MU_LCR_REG = 3;
         aux->AUX_MU_MCR_REG = 0;
         aux->AUX_MU_BAUD_REG = 541;

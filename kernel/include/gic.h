@@ -71,5 +71,7 @@ struct gic_regs {
 
 void gic_init(u64);
 struct gic_regs *gic_get();
+void gic_irq_enable(u8);
 
+extern struct irq_interface gic_interface;
 #endif 
