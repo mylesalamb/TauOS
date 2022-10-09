@@ -2,15 +2,22 @@
 
 u8 isalpha(char c)
 {
-        return (c <= 90 && c >= 65) || (c <= 122 && c >= 97);
+        return (c <= 'Z' && c >= 'A') || (c <= 'z' && c >= 'a');
 }
 
 u8 isnum(char c)
 {
-        return c <= 57 && c >= 48;
+        return c <= '9' && c >= '0';
 }
 
 u8 isalnum(char c)
 {
         return isalpha(c) || isnum(c);
+}
+
+u8 ctoi(char c)
+{
+        if(!isnum(c))
+                return 0xff;
+        return c - '0';
 }

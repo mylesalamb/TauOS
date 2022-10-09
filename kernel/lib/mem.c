@@ -23,6 +23,7 @@ void memset(void *dst, u64 c, size_t n)
         while(n--)
         {
                 *_dst = _c;
+                _dst++;
         }
 
 }

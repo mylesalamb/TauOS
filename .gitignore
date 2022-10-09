@@ -1,6 +1,7 @@
 gcc-arm-10.3-2021.07-x86_64-aarch64-none-elf/*
 gcc-arm-10.3-2021.07-x86_64-aarch64-none-elf.tar.xz
 obj/
+docs/
 # Prerequisites
 *.d
 

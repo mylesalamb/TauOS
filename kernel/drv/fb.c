@@ -4,6 +4,7 @@
 #include <lib/common.h>
 #include <lib/io.h>
 #include <lib/mem.h>
+#include <lib/char.h>
 
 struct fb_state
 {
@@ -12,17 +13,39 @@ struct fb_state
         u32 depth;
         u32 pitch;
         u32 offset[2];
+        u32 fg;
+        u32 bg;
+        u8 ansi_esc;
+        u8 ansi_count;
+        u8 ansi_arg[2];
+
 } state;
 
+#define FB_DEFAULT_FG FB_WHITE
+#define FB_DEFAULT_BG FB_BLACK
+
+#define ANSI_IS_FG(x) (x >= 30 && x <= 37)
+#define ANSI_IS_BG(x) (x >= 40 && x <= 47)
+
 const u32 color_pallete[] = {
+       // Standard colours
        [FB_BLACK]   = 0x00000000,
-       [FB_WHITE]   = 0x00ffffff,
-       [FB_RED]     = 0x00ff0000,
-       [FB_GREEN]   = 0x0000ff00,
-       [FB_YELLOW]  = 0x00ffff00,
-       [FB_BLUE]    = 0x000000ff,
-       [FB_MAGENTA] = 0x00ff00ff,
-       [FB_CYAN]    = 0x0000ffff
+       [FB_RED]     = 0x00aa0000,
+       [FB_GREEN]   = 0x0000aa00,
+       [FB_YELLOW]  = 0x00aa5500,
+       [FB_BLUE]    = 0x000000aa,
+       [FB_MAGENTA] = 0x00aa00aa,
+       [FB_CYAN]    = 0x0000aaaa,
+       [FB_WHITE]   = 0x00aaaaaa,
+       // Bright colours
+       [FB_B_BLACK]   = 0x00aaaaaa,
+       [FB_B_RED]     = 0x00ffaaaa,
+       [FB_B_GREEN]   = 0x00aaffaa,
+       [FB_B_YELLOW]  = 0x00ffffaa,
+       [FB_B_BLUE]    = 0x00aaaaff,
+       [FB_B_MAGENTA] = 0x00ffaaff,
+       [FB_B_CYAN]    = 0x00aaffff,
+       [FB_B_WHITE]   = 0x00ffffff,
 };
 void fb_writes(char *);
 
@@ -98,10 +121,88 @@ void fb_init()
         state.pitch = 640;
         state.offset[0] = 0;
         state.offset[1] = 0;
+        state.fg = FB_DEFAULT_FG;
+        state.bg = FB_DEFAULT_BG;
+}
+
+void fb_set_colour()
+{
+        if(state.ansi_count == 0 && state.ansi_arg[0] == 0)
+        {
+                state.bg = FB_DEFAULT_BG;
+                state.fg = FB_DEFAULT_FG;
+                return;
+        }
+
+        if(state.ansi_count == 1)
+        {
+                // ok this is something we will handle
+                // 2 arg form
+                if(ANSI_IS_FG(state.ansi_arg[1]))
+                {
+                        state.fg = state.ansi_arg[1] - 30;
+                }
+                if(ANSI_IS_BG(state.ansi_arg[1]))
+                {
+                        state.bg = state.ansi_arg[1] - 40;
+                }
+        }
+}
+
+void fb_parse_ansi(char c)
+{
+        // We are targetting strictly vt100 here
+        // Anything is else is too complex / cant be bothered
+        if(!state.ansi_esc)
+        {
+                state.ansi_esc = 1;
+                state.ansi_count = 0;
+                state.ansi_arg[0] = 0;
+                state.ansi_arg[1] = 0;
+
+        }
+
+        if(isalpha(c))
+        {
+                switch(c)
+                {
+                        case 'm':
+                                fb_set_colour();
+                                break;
+                        default:
+                                break;
+
+                }
+                // After reading and executing the command we are done
+                state.ansi_esc = 0;
+        }
+        if(c == '[')
+        {
+                return;
+        }
+
+        if(c == ';')
+        {
+                state.ansi_count++;
+                return;
+        }
+        if(isnum(c))
+        {
+                state.ansi_arg[state.ansi_count] = (state.ansi_arg[state.ansi_count] * 10 + ctoi(c));
+        }
+
+
+
 }
 
 void fb_writec(char c)
 {
+        if(c == '\033' || state.ansi_esc)
+        {
+                fb_parse_ansi(c);
+                return;
+        }
+
         // column
         for(int i = 0; i < 8; i++)
         {
@@ -112,11 +213,11 @@ void fb_writec(char c)
                         ureg8 *csr = (state.fb_addr + (i + state.offset[0]) + ((640) * (j + state.offset[1])));
                         if(bits & (1 << i))
                         {
-                                *csr= FB_WHITE;
+                                *csr = state.fg;
                         }
                         else
                         {
-                                *csr = FB_BLACK;
+                                *csr = state.bg;
                         }
                         
                 }

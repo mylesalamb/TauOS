@@ -9,4 +9,5 @@
 #define DUMP_OFFSET(s, m) printk(STRINGIFY(s)"."STRINGIFY(m) ": %h\n", offsetof(s,m));
 #define ARRAY_SZ(x) (sizeof(x)/sizeof(x[0]))
 
+#define BIT(x) (1 << x)
 #endif

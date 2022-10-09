@@ -26,7 +26,15 @@ sync_sd () {
 boot_from_host () {
         echo "Start development bootloader"
         ./obj/bootloader/host/hostloader --input ./obj/kernel/kernel8.img
+}
 
+generate_symbol_table() {
+        local _SYMOUT='./obj/tools/symtab/symtab.bin'
+        echo "Generate symbol table to $_SYMOUT"
+
+        # Get machine formatted symbol table output
+        # replace leading spaces, replace human formatted columns with commas
+        readelf -Ws ./obj/kernel/kernel8.elf | tail --lines=+4 | sed -E 's/^[[:space:]]*([[:digit:]]+):/\1/; s/[[:space:]]+/,/g' | ./obj/tools/symtab/symtab --output $_SYMOUT
 }
 
 main() {
@@ -39,7 +47,8 @@ main() {
                         tar -xvf $CC_DIR.tar.xz
                         ;;
                 "os")
-                        make ${1:-$_DEFAULT_OS_TARGET} -{r,R}
+                        make ${1:-$_DEFAULT_OS_TARGET} -{r,R,s}
+                        generate_symbol_table
                         ;;
                 "chain")
                         boot_from_host
@@ -49,5 +58,5 @@ main() {
                         ;;
         esac
 }
-set -x
+
 main $@

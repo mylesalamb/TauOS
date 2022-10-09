@@ -1,5 +1,7 @@
 #include <aux.h>
 #include <gpio.h>
+#include <lib/common.h>
+
 
 #define SPI_CS1  7
 #define SPI_CS0  8
@@ -8,8 +10,18 @@
 #define SPI_SCLK 11
 
 #define SPI_ENABLE 0x02
+#define SPI_REGS_OFFSET 0x204000
 
-void spi_init() 
+
+#define SPI_CS_RXF BIT(20)
+#define SPI_CS_RXR BIT(19)
+#define SPI_CS_TXD BIT(18)
+#define SPI_CS_RXD BIT(17)
+
+
+struct spi_regs *spi_dev;
+
+void spi_init(u64 base_addr) 
 {
         struct aux_regs *regs;
 
@@ -27,4 +39,20 @@ void spi_init()
 
         regs = aux_get();
         regs->AUX_ENABLES |= SPI_ENABLE;
+
+        spi_dev = (struct spi_regs *)(base_addr + SPI_REGS_OFFSET);
+}
+
+struct spi_regs *spi_get()
+{
+        return spi_dev;
+}
+
+
+void spi_send(u8 *buff, u64 sz)
+{
+        struct spi_regs *regs = spi_get();
+
+
+
 }
