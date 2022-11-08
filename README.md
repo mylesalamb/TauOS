@@ -3,12 +3,15 @@
 An experimental operating system for the Raspberry Pi, written in C targetting
 arm64.
 
+The operating system exists merely as a collection of drivers at the moment,
+although it is nearing supporting loading programs from disk.
+
 ## Building / Running
 
 It is assumed that the host machine is x86\_64 and is running some linux distribution.
 It has only been tested on Artix(runit) but should also work on other distros.
 
-To get the cross-compiler used by this project run.
+This project uses an arm64 cross compiler. To get the cross-compiler used by this project run.
 
 ```
 ./build.sh toolchain
@@ -43,7 +46,8 @@ and will be executed.
 
 As this operating system will realistically only ever target one board, the
 Raspberry Pi 4b, I will probably develop it as a monolithic kernel. As the hardware
-fixed. Maybe I'll port it to the Raspberry Pi 5, whenever that comes out.
+fixed. Maybe I'll port it to the Raspberry Pi 5, or a mangopi-mq, whenever I am in
+posession of one of those boards.
 
 I have a SPI ethernet board which is much easier to program than the PCI ethernet
 on the board, so networking is something that I will also work on.
@@ -71,3 +75,10 @@ on the board, so networking is something that I will also work on.
 * BASH, other shells will probably work as well
 * GNU Make, I use some GNU specific stuff so other varients of Make will probably not work
 * ARM cross-compiler, although you can get that through `./build.sh toolchain`
+* x86 C Compiler, for tools shipped with the project
+
+## Resources Used
+
+* [BCM2711 Peripherals manual](https://datasheets.raspberrypi.com/bcm2711/bcm2711-peripherals.pdf)
+* [osdev Wiki](https://wiki.osdev.org/ARM_Overview)
+* [rockytriton's youtube series](https://github.com/rockytriton/LLD)

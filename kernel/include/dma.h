@@ -4,6 +4,10 @@
 #include <types.h>
 #include <lib/common.h>
 
+#define FLAGS_DMA_LITE          BIT(1)
+#define FLAGS_DMA_NORM          BIT(2)
+#define FLAGS_DMA_DMA4          BIT(3)
+
 /* Various bit-masks for various registers*/
 #define CS_RESET                BIT(31)
 #define CS_ABORT                BIT(30)
@@ -62,6 +66,7 @@ struct dma_regs {
         ureg32 stride;
         ureg32 next;
         ureg32 dbg;
+        ureg32 _reserved[54]
 };
 
 
