@@ -5,6 +5,8 @@
 
 #define PHY_OFFSET_MB_REGS 0xB880
 
+#define MB_MSG_MASK 0x80000000
+
 enum mbox_tags {
         MBOX_FW_VERSION  = 0x00000001,
         MBOX_BOARD_MODEL = 0x00010001,

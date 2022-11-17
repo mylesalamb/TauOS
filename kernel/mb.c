@@ -1,8 +1,10 @@
 #include <stddef.h>
 #include <types.h>
+#include <klog.h>
 #include <mb.h>
 #include <lib/io.h>
 #include <lib/mem.h>
+
 
 #define PHY_OFFSET_MB_REGS 0xB880
 
@@ -95,7 +97,7 @@ u32 *mb_append_tag(
         // calculate alignment to 32 bits
         u8 align = (4 - ((u64)end & 3)) & 3;
         end += align;
-
+        klog_info("MB message tag has end %h\n", end);
         // Return the first free byte after
         return (u32 *)end;
 }
@@ -132,7 +134,7 @@ u32 mb_generic_command(u32 mbox_cmd, u32 size, u32 code, void *value, u32 value_
         hdr = (struct mbox_hdr *)mb_recv(MBOX_ARM_TO_VC);
         struct mbox_tag *csr = (struct mbox_tag *)hdr->tags;
         if(csr->id != mbox_cmd) {
-                printk("Did not get expected mbox_tag back\n");
+                klog_warn("Did not get expected mbox_tag back\n");
                 return 1;
         }
         memcpy((void *)csr->value, value, csr->size);

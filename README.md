@@ -62,7 +62,7 @@ on the board, so networking is something that I will also work on.
 - [x] 3rd Stage bootloader
 - [x] GIC-400 Setup
 - [x] Timer interrupts
-- [ ] DMA controller Setup
+- [x] DMA controller Setup
 - [ ] EMMC2 sd controller setup 
 - [ ] Minimal FAT32 FS driver
 - [ ] SPI Ethernet (ENC28J60)

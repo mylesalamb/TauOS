@@ -1,10 +1,12 @@
 #include <mb.h>
+#include <klog.h>
 #include <drv/font.h>
 #include <drv/fb.h>
 #include <lib/common.h>
 #include <lib/io.h>
 #include <lib/mem.h>
 #include <lib/char.h>
+#include <dma.h>
 
 struct fb_state
 {
@@ -23,29 +25,30 @@ struct fb_state
 
 #define FB_DEFAULT_FG FB_WHITE
 #define FB_DEFAULT_BG FB_BLACK
+#define FB_BOLD_OFFSET FB_B_BLACK
 
 #define ANSI_IS_FG(x) (x >= 30 && x <= 37)
 #define ANSI_IS_BG(x) (x >= 40 && x <= 47)
 
 const u32 color_pallete[] = {
-       // Standard colours
-       [FB_BLACK]   = 0x00000000,
-       [FB_RED]     = 0x00aa0000,
-       [FB_GREEN]   = 0x0000aa00,
-       [FB_YELLOW]  = 0x00aa5500,
-       [FB_BLUE]    = 0x000000aa,
-       [FB_MAGENTA] = 0x00aa00aa,
-       [FB_CYAN]    = 0x0000aaaa,
-       [FB_WHITE]   = 0x00aaaaaa,
-       // Bright colours
-       [FB_B_BLACK]   = 0x00aaaaaa,
-       [FB_B_RED]     = 0x00ffaaaa,
-       [FB_B_GREEN]   = 0x00aaffaa,
-       [FB_B_YELLOW]  = 0x00ffffaa,
-       [FB_B_BLUE]    = 0x00aaaaff,
-       [FB_B_MAGENTA] = 0x00ffaaff,
-       [FB_B_CYAN]    = 0x00aaffff,
-       [FB_B_WHITE]   = 0x00ffffff,
+        // Standard colours
+        [FB_BLACK]   = 0x00000000,
+        [FB_RED]     = 0x000000aa,
+        [FB_GREEN]   = 0x0000aa00,
+        [FB_YELLOW]  = 0x000055aa,
+        [FB_BLUE]    = 0x00aa0000,
+        [FB_MAGENTA] = 0x00aa00aa,
+        [FB_CYAN]    = 0x00aaaa00,
+        [FB_WHITE]   = 0x00aaaaaa,
+        // Bright colours
+        [FB_B_BLACK]   = 0x00aaaaaa,
+        [FB_B_RED]     = 0x00aaaaff,
+        [FB_B_GREEN]   = 0x00aaffaa,
+        [FB_B_YELLOW]  = 0x00aaffff,
+        [FB_B_BLUE]    = 0x00ffaaaa,
+        [FB_B_MAGENTA] = 0x00ffaaff,
+        [FB_B_CYAN]    = 0x00ffffaa,
+        [FB_B_WHITE]   = 0x00ffffff,
 };
 void fb_writes(char *);
 
@@ -59,64 +62,78 @@ void fb_init()
         u32 *csr;
         ureg32 *buff = mb_get_buff();  
         hdr = mb_fmt_hdr(buff, 0);
-        
-        u32 fb_align = 4;
-        csr = mb_append_tag((u32 *)hdr->tags, MBOX_FB_ALLOC, 8, 0, &fb_align, sizeof(fb_align));
-        
+
+        csr = (u32 *)hdr->tags;
+
         u32 pres[] = {640,480};
         csr = mb_append_tag(csr, MBOX_SET_PRES, 8, 0, pres, sizeof(pres));
-        
+
         u32 vres[] = {640,480};
         csr = mb_append_tag(csr, MBOX_SET_VRES, 8, 0, vres, sizeof(vres));
-        
+
         u32 depth = 8;
         csr = mb_append_tag(csr, MBOX_SET_DEPTH, 4, 0, &depth, sizeof(depth));
-        
-        u32 porder = 1;
-        csr = mb_append_tag(csr, MBOX_SET_PORDER, 4, 0, &porder, sizeof(porder));
-        
+
         csr = mb_append_tag(csr, MBOX_GET_PITCH, 4, 0, NULL, 0);
-       
+
         u32 palette[ARRAY_SZ(color_pallete) + 2] = {0, ARRAY_SZ(color_pallete)};
         memcpy(color_pallete, palette + 2, sizeof(color_pallete));        
         csr = mb_append_tag(csr, MBOX_SET_PALETTE, sizeof(palette), 0, palette, sizeof(palette));
 
+        u32 fb_align = 4;
+        csr = mb_append_tag(csr, MBOX_FB_ALLOC, 8, 0, &fb_align, sizeof(fb_align));
+
+
         mb_finalize_msg(hdr, csr);
         mb_send(hdr, MBOX_ARM_TO_VC);
-        
+
         hdr = mb_recv(MBOX_ARM_TO_VC);
-        printk("message size: %h\nmessage code: %h\n", hdr->size, hdr->code);
-        
+
+        if(hdr->code & ~MB_MSG_MASK)
+        {
+                klog_error("Mailbox call failed! header code was %h\n", hdr->code);
+                return;
+        }
+
         /* need to add proper traversal of response */
+
+
         struct mbox_tag *tag = mb_get_tag(hdr, MBOX_FB_ALLOC);
         if(tag->id == MBOX_FB_ALLOC) {
-                printk("got framebuffer tag back \n");
-                printk("size is %h\ncode is: %h\n", tag->size, tag->code);
-                ureg32 * values = (ureg32 *)tag->value;
-                /* should return a phys addr, but of course it doesnt */
-                ureg8 *fb_addr = (ureg8 *)(u64)((values[0] | 0x40000000) & ~0xC0000000);
-                u32 fb_size = values[1];
+                klog_debug("got framebuffer tag back \n");
+                klog_debug("size is %h\ncode is: %h\n", tag->size, tag->code);
 
-                state.fb_addr = fb_addr;
+                ureg32 * values = (ureg32 *)tag->value;
+
+                ureg8 *fb_bus_addr = (ureg8 *)(u64)(values[0]);
+                u32 fb_size = values[1];
+                state.fb_addr = (ureg8 *)BUS_TO_PHYS((u64)fb_bus_addr);
                 state.fb_size = fb_size;
 
-                printk("fb_size: %h\nfb_addr: %h\n", fb_size, fb_addr);
+                klog_debug("Framebuffer address is BUS_ADDR(%h) => PHYS_ADDR(%h)\n", fb_bus_addr, BUS_TO_PHYS((u64)fb_bus_addr));
+                klog_debug("Framebuffer size is %h\n", fb_size);
         }
+
+
         tag = mb_get_tag(hdr, MBOX_GET_PITCH);
         if(tag->id == MBOX_GET_PITCH)
         {
-                printk("Got pitch tag back\n");
-                
+                klog_debug("Got pitch tag back\n");
+
                 ureg32 * value = (ureg32 *)tag->value;
-                printk("Pitch is: %h\n", *value);
+                klog_debug("Pitch is: %h\n", *value);
                 state.pitch = *value;
         }
+
+
         tag = mb_get_tag(hdr, MBOX_SET_PALETTE);
         if(tag->id == MBOX_SET_PALETTE)
         {
-                printk("Got set palette code: %h\n", tag->code);
-                printk("got value: %h\n", *((ureg32 *)tag->value));
+                klog_debug("Got set palette code: %h\n", tag->code);
+                klog_debug("got value: %h\n", *((ureg32 *)tag->value));
         }
+
+
         state.depth = 1;
         state.pitch = 640;
         state.offset[0] = 0;
@@ -134,18 +151,19 @@ void fb_set_colour()
                 return;
         }
 
+        /* I only handle the two argument form of [<bold>;<colour_code>m */
         if(state.ansi_count == 1)
         {
-                // ok this is something we will handle
-                // 2 arg form
+                u32 bold = state.ansi_arg[0] ? FB_BOLD_OFFSET : 0 ;
                 if(ANSI_IS_FG(state.ansi_arg[1]))
                 {
-                        state.fg = state.ansi_arg[1] - 30;
+                        state.fg = bold + state.ansi_arg[1] - 30;
                 }
                 if(ANSI_IS_BG(state.ansi_arg[1]))
                 {
-                        state.bg = state.ansi_arg[1] - 40;
+                        state.bg = bold + state.ansi_arg[1] - 40;
                 }
+
         }
 }
 
@@ -203,25 +221,14 @@ void fb_writec(char c)
                 return;
         }
 
-        // column
-        for(int i = 0; i < 8; i++)
+        /* Get a row of a character and write the whole lot out in one write */
+        for(int j = 0; j < 8; j++)
         {
-                //row
-                for(int j = 0; j < 8; j++)
-                {
-                        u8 bits = font[(u8)c][j]; 
-                        ureg8 *csr = (state.fb_addr + (i + state.offset[0]) + ((640) * (j + state.offset[1])));
-                        if(bits & (1 << i))
-                        {
-                                *csr = state.fg;
-                        }
-                        else
-                        {
-                                *csr = state.bg;
-                        }
-                        
-                }
-        
+                u8 bits = (u64)font[(u8)c][j]; 
+                ureg64 *csr = (ureg64 *)(state.fb_addr + (state.offset[0]) + ((640) * (j + state.offset[1])));
+                u64 fg_row = _fb_fast_tile_byte(bits);
+                u64 bg_row = (~fg_row) & 0x0101010101010101;
+                *csr = (fg_row * state.fg) | (bg_row * state.bg);
         }
 
         // TODO: replace magic with pres and font size
@@ -244,4 +251,21 @@ void fb_writes(char *s)
 {
         for(; *s; s++)
                 fb_writec(*s);
+}
+
+
+static ureg32 cb_buff[256] __attribute__((aligned(32)));
+void fb_dma_test()
+{
+        u8 dma_channel = dma_channel_alloc(FLAGS_DMA_NORM);
+        u32 arr[10] = {1}; 
+        for(int i = 0; i < ARRAY_SZ(arr); i++)
+                arr[i] = 0x01010101;
+
+        dma_cb_init_memcpy(dma_channel, cb_buff, arr, state.fb_addr, 640 * 480);
+        klog_debug("starting dma copy\n");
+        dma_start(dma_channel, cb_buff);
+
+        while(1)
+                ;
 }

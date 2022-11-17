@@ -1,12 +1,14 @@
 #include <types.h>
 #include <dma.h>
+#include <klog.h>
 #include <lib/bitmap.h>
+#include <lib/mem.h>
 
 #define DMA_REGS_OFFSET 0x7000
 #define DMA_CHANNEL_COUNT 16
 
 #define DMA_LITE_LOW 7
-#define DMA_LITE_HI 10
+#define DMA_LITE_HIGH 10
 #define DMA_IS_LITE(x) ( (x >= 7) && (x <= 10) )
 
 #define DMA_NORM_LOW 0
@@ -32,11 +34,11 @@ void dma_init(u64 base_addr)
 
         for(int i = 0; i < DMA_CHANNEL_COUNT; i++)
         {
-               bitmap_clr_bit(&dma_channels, i);
+               bitmap_clr_bit(dma_channels, i);
         }
 
         /* Channel 15 is used by the vpu so mark it as allocated */
-        bitmap_set_bit(&dma_channels, 15);
+        bitmap_set_bit(dma_channels, 15);
 
 }
 
@@ -65,27 +67,67 @@ u8 dma_channel_alloc(u8 flags)
 
         for(u8 csr = low ; csr <= high; csr++)
         {
-                if(!bitmap_is_set(&dma_channels, csr))
+                if(!bitmap_is_set(dma_channels, csr)){
                         channel = csr;
+                        break;
+                }
         }
-        /* Else just try alloc a lite channel */
-
-        bitmap_set_bit(&dma_channels, channel);
+        klog_debug("Allocate channel %h\n", channel);
+        bitmap_set_bit(dma_channels, channel);
         return channel;
+}
+
+
+void dma_cb_init_memcpy(u8 channel, void *cb, void *src, void *dst, size_t n)
+{
+        if(((u64)cb) & 0x1f)
+        {
+                klog_error("Cannot use provided control block as it fails alignment check: %h\n", (u64)cb);
+                return;
+        }
+
+        if(DMA_IS_NORM(channel))
+        {
+                klog_debug("Setup DMA (norm) memcpy\n");
+                struct dma_lite_cb *lite_cb = cb;
+                lite_cb->source_ad = PHYS_TO_BUS((u32)src);
+                lite_cb->dest_ad = PHYS_TO_BUS((u32)dst);
+                lite_cb->ti = TI_DESTINC;
+                lite_cb->transfer_length = n;
+
+        }
+        if(DMA_IS_LITE(channel))
+        {
+                struct dma_cb *norm_cb = cb;
+
+        }
+        if(DMA_IS_DMA4(channel))
+        {
+                struct dma_dma4_cb *dma4_cb = cb;
+        }
+
 }
 
 void dma_start(u8 channel, void *cb)
 {
         if(channel > DMA_CHANNEL_COUNT)
                 return;
+        
+        klog_debug("Start DMA transfer on channel %h\n", channel);
 
-        dma_regs[channel]->conblck_ad = cb;
+        dma_dev[channel].conblk_ad = (u32)PHYS_TO_BUS((u64)cb);
+        dma_dev[channel].cs = CS_ACTIVE;
+}
 
-
+void dma_wait(u8 channel)
+{
+        while(dma_dev[channel].cs & CS_ACTIVE)
+                ;
 }
 
 void dma_channel_free(u8 channel)
 {
         /* TODO: wait for outstanding transfer */
-        bitmap_clr_bit(&dma_channels, channel)
+        dma_wait(channel);
+        bitmap_clr_bit(dma_channels, channel);
 }

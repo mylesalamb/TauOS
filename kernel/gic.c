@@ -99,7 +99,7 @@ void gic_init(u64 base_addr)
         u64 irq_lines;
         gic_dev.gicc = (struct gicc_regs *)(base_addr + GICC_OFFSET);
         gic_dev.gicd = (struct gicd_regs *)(base_addr + GICD_OFFSET);
-        gic_dump_regs();
+        // gic_dump_regs();
 
         gic_dev.gicd->CTLR = 0x00;
 

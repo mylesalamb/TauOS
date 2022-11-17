@@ -1,5 +1,6 @@
 #include <lib/mem.h>
 
+/* TODO: This is terrible unoptimised, by copying words we can expect a massive speedup */
 /* gcc will emit calls to these functions, best to define them somewhere */
 void memcpy(const void *restrict src, void *restrict dst, size_t n)
 {
