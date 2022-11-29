@@ -51,5 +51,9 @@ void kmain()
         // timer_init(PHYS_BASE_ADDR);
         printk("Done\n");
         printk("test dma write!\n");
+        for(int i = 0; i < 100; i++)
+        {
+                printk("Do something that prints lots of chars %h\n", i);
+        }
         // fb_dma_test();
 }

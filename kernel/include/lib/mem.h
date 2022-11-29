@@ -11,5 +11,6 @@
 void memcpy(const void *restrict, void *restrict, size_t);
 void memset(void *, u64, size_t);
 void memmove(void *, void *, size_t);
+void memzero(void *, size_t);
 
 #endif

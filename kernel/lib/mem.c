@@ -41,3 +41,11 @@ void memmove(void *src, void *dst, size_t n)
                 ++_dst;
         }
 }
+
+void memzero(void *src, size_t n)
+{
+        u8 *_dst = src;
+        while(n--)
+                *_dst = 0;
+
+}

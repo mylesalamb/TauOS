@@ -89,10 +89,11 @@ void dma_cb_init_memcpy(u8 channel, void *cb, void *src, void *dst, size_t n)
         if(DMA_IS_NORM(channel))
         {
                 klog_debug("Setup DMA (norm) memcpy\n");
+                memzero(cb, sizeof(struct dma_lite_cb));
                 struct dma_lite_cb *lite_cb = cb;
                 lite_cb->source_ad = PHYS_TO_BUS((u32)src);
                 lite_cb->dest_ad = PHYS_TO_BUS((u32)dst);
-                lite_cb->ti = TI_DESTINC;
+                lite_cb->ti = TI_DESTINC | TI_SRCINC;
                 lite_cb->transfer_length = n;
 
         }

@@ -23,6 +23,8 @@ struct fb_state
 
 } state;
 
+static ureg32 cb_buff[256] __attribute__((aligned(32)));
+
 #define FB_DEFAULT_FG FB_WHITE
 #define FB_DEFAULT_BG FB_BLACK
 #define FB_BOLD_OFFSET FB_B_BLACK
@@ -240,8 +242,11 @@ void fb_writec(char c)
 
         if(state.offset[1] + 8 >= 480)
         {
-                /* Must be memmove as the src and dst are aliased */
-                memmove((void *)(state.fb_addr + (state.pitch * 8)), (void *)state.fb_addr, state.fb_size - (state.pitch * 8));
+                u8 channel;
+                channel = dma_channel_alloc(FLAGS_DMA_NORM);
+                dma_cb_init_memcpy(channel, cb_buff, (void *)(state.fb_addr + (state.pitch * 8)), (void *)state.fb_addr, state.fb_size - (state.pitch * 8));
+                dma_start(channel, cb_buff);
+                dma_channel_free(channel);
                 state.offset[1] -= 8;
         }
 
@@ -254,7 +259,6 @@ void fb_writes(char *s)
 }
 
 
-static ureg32 cb_buff[256] __attribute__((aligned(32)));
 void fb_dma_test()
 {
         u8 dma_channel = dma_channel_alloc(FLAGS_DMA_NORM);
