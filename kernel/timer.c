@@ -27,14 +27,14 @@ void timer_init(u64 base_addr)
         u32 timer_low;
         timer_dev = (struct timer_regs*)(base_addr + TIMER_REGS_OFFSET);
         
-
-        timer_low = timer_dev->CLO;
-        timer_low += CLOCK_INT;
+        /* Disable interrupt stuff at the moment*/
+//        timer_low = timer_dev->CLO;
+//        timer_low += CLOCK_INT;
         
         // Clear out the match assuming that one has happened
-        timer_dev->CS |= 0x00000010;
-        timer_dev->C1 = timer_low;
-        irq_install_handler(TIMER_IRQ_NUM, timer_irq_handler);
+//        timer_dev->CS |= 0x00000010;
+//        timer_dev->C1 = timer_low;
+//        irq_install_handler(TIMER_IRQ_NUM, timer_irq_handler);
 }
 
 void timer_irq_handler()
@@ -42,4 +42,12 @@ void timer_irq_handler()
         printk("Timer tick!\n");
         timer_dev->C1 += CLOCK_INT;
         timer_dev->CS |= 0x00000010;
+}
+
+void timer_sleep_ms(u32 m)
+{
+        u64 match = ((u64)timer_dev->CHI << 32) + (((CLOCKHZ / 1000) * m) + timer_dev->CLO);
+        
+        while(match > (((u64)timer_dev->CHI << 32) | (u64)timer_dev->CLO))
+                ;
 }

@@ -93,7 +93,7 @@ void dma_cb_init_memcpy(u8 channel, void *cb, void *src, void *dst, size_t n)
                 struct dma_lite_cb *lite_cb = cb;
                 lite_cb->source_ad = PHYS_TO_BUS((u32)src);
                 lite_cb->dest_ad = PHYS_TO_BUS((u32)dst);
-                lite_cb->ti = TI_DESTINC | TI_SRCINC;
+                lite_cb->ti = TI_DESTINC | TI_SRCINC | TI_SRCWIDTH | TI_DESTWIDTH;
                 lite_cb->transfer_length = n;
 
         }

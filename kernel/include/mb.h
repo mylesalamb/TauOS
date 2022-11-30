@@ -7,6 +7,8 @@
 
 #define MB_MSG_MASK 0x80000000
 
+#define MB_CLOCK_ID_EMMC2 0x00000000c
+
 enum mbox_tags {
         MBOX_FW_VERSION  = 0x00000001,
         MBOX_BOARD_MODEL = 0x00010001,
@@ -14,6 +16,8 @@ enum mbox_tags {
         MBOX_BOARD_MAC   = 0x00010003,
         MBOX_BOARD_SER   = 0x00010004,
         MBOX_ARM_MEM     = 0x00010005,
+        MBOX_GET_CLOCK_RATE   = 0x00030002,
+        MBOX_SET_CLOCK_RATE   = 0x00038002, 
         MBOX_CLOCKS      = 0x00010007,
         MBOX_CMD_LINE    = 0x00050001,
         MBOX_DMA_CHANNEL = 0x00060001,
@@ -78,7 +82,13 @@ struct mbox_hdr *mb_fmt_hdr(ureg32 *, u32);
 void mb_finalize_msg(void *, void *);
 u32 *mb_append_tag(u32*, u32, u32, u32, void*, u64);
 void mb_send(struct mbox_hdr *, u8 );
+
+/* Define some stuff to make things a little more readable elsewhere */
 u32 mb_get_board_model();
+u32 mb_get_firmware_revision();
+u32 mb_get_board_revision();
+u32 mb_get_clock_rate(u32);
+void mb_set_clock_rate(u32, u32);
 struct mbox_hdr *mb_recv(u8);
 struct mbox_tag *mb_get_tag(struct mbox_hdr *hdr, u32 code);
 #endif

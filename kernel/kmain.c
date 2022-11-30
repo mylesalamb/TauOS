@@ -7,6 +7,8 @@
 #include <dma.h>
 #include <drv/muart.h>
 #include <drv/fb.h>
+#include <drv/sd.h>
+#include <drv/fs/mbr.h>
 #include <lib/io.h>
 #include <gic.h>
 #include <timer.h>
@@ -27,6 +29,7 @@ void kinit(void *dtb)
         gpio_init(PHYS_BASE_ADDR);
         mb_init(PHYS_BASE_ADDR);
         dma_init(PHYS_BASE_ADDR);
+        timer_init(PHYS_BASE_ADDR);
 
         /* Setup some output devices*/
         io_init(&muart_console);
@@ -41,19 +44,21 @@ void kinit(void *dtb)
         irq_enable();
 
         printk(IO_GREEN "Kernel initialisation tasks done!\n" IO_RESET);
+        printk("Firmware revision: %h\n", mb_get_firmware_revision());
+        printk("Board revision: %h\n\n", mb_get_board_revision());
         kmain();
 }
+
+struct mbr_header mbr;
 
 void kmain()
 {
         printk("Booted to TauOS kernel!\n\n");
-        // printk("Initialise timer\n");
-        // timer_init(PHYS_BASE_ADDR);
-        printk("Done\n");
-        printk("test dma write!\n");
-        for(int i = 0; i < 100; i++)
-        {
-                printk("Do something that prints lots of chars %h\n", i);
-        }
-        // fb_dma_test();
+        printk("Initialise EMMC2\n");
+
+        sd_init(PHYS_BASE_ADDR);
+        sd_seek(0);
+        sd_read(&mbr, 512);
+        mbr_dump(&mbr);
+
 }

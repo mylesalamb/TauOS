@@ -32,14 +32,15 @@ sudo ./build.sh sd $DEV
 where `$DEV` represents the name of the SD device's boot partition. This value
 defaults to `mmcblk0p1`.
 
-To then run the uart-boot loader run
+To run the development bootloader run.
 
 ```
 sudo ./build.sh chain
 ```
 
 You can then power on the device, and the previously built kernel will be loaded to the Pi's memory
-and will be executed.
+and will be executed. By default, the kernel is loaded to `0x80000`. Note that this
+is different to the load address of `0x200000` used by the newer Raspberry Pi firmware.
 
 
 ## Design Decisions
@@ -48,6 +49,10 @@ As this operating system will realistically only ever target one board, the
 Raspberry Pi 4b, I will probably develop it as a monolithic kernel. As the hardware
 fixed. Maybe I'll port it to the Raspberry Pi 5, or a mangopi-mq, whenever I am in
 posession of one of those boards.
+
+In its current state the operating system only supports SDHC SD cards, as in thats
+the only the only type of SD card I have tested with, SDUC might work. SDSC definitely
+will not.
 
 I have a SPI ethernet board which is much easier to program than the PCI ethernet
 on the board, so networking is something that I will also work on.
@@ -64,11 +69,11 @@ on the board, so networking is something that I will also work on.
 - [x] Timer interrupts
 - [x] DMA controller Setup
 - [ ] EMMC2 sd controller setup 
-- [ ] Minimal FAT32 FS driver
-- [ ] SPI Ethernet (ENC28J60)
 - [ ] MMU initialisation
 - [ ] PMM -> VMM allocator stack (kmalloc, kcalloc, kpalloc, upalloc...)
+- [ ] Minimal FAT32 FS driver
 - [ ] User processes
+- [ ] SPI Ethernet (ENC28J60)
 
 ## Dependencies
 

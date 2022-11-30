@@ -142,3 +142,30 @@ u32 mb_generic_command(u32 mbox_cmd, u32 size, u32 code, void *value, u32 value_
 
 }
 
+u32 mb_get_firmware_revision()
+{
+        u32 rev = 0;
+        mb_generic_command(MBOX_FW_VERSION, sizeof(u32), 0, &rev, 0);
+        return rev;
+}
+
+u32 mb_get_board_revision()
+{
+        u32 rev = 0;
+        mb_generic_command(MBOX_BOARD_REV, sizeof(u32), 0, &rev, 0);
+        return rev;
+}
+
+
+u32 mb_get_clock_rate(u32 clock_id)
+{
+        u32 response[2];
+        response[0] = clock_id;
+        mb_generic_command(MBOX_GET_CLOCK_RATE, sizeof(response), 0, response, sizeof(response[0]));
+        return response[1];
+}
+
+void mb_set_clock_rate(u32 clock_id, u32 clock_rate)
+{
+
+}

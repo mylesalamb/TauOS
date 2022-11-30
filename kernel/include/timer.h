@@ -15,4 +15,5 @@ struct timer_regs {
 
 void timer_init(u64 base_addr);
 
+void timer_sleep_ms(u32);
 #endif
