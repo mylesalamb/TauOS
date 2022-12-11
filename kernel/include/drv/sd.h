@@ -46,4 +46,6 @@ struct sd_regs {
 };
 
 void sd_init(u64);
+void sd_read(u8 *, u64);
+void sd_seek(u64);
 #endif

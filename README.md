@@ -68,7 +68,7 @@ on the board, so networking is something that I will also work on.
 - [x] GIC-400 Setup
 - [x] Timer interrupts
 - [x] DMA controller Setup
-- [ ] EMMC2 sd controller setup 
+- [x] EMMC2 sd controller setup 
 - [ ] MMU initialisation
 - [ ] PMM -> VMM allocator stack (kmalloc, kcalloc, kpalloc, upalloc...)
 - [ ] Minimal FAT32 FS driver

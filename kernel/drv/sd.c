@@ -49,7 +49,12 @@
 #define SD_INT_STATUS_TRANSFER_COMPLETE BIT(1)
 #define SD_INT_STATUS_BLK_GAP           BIT(2)
 #define SD_INT_STATUS_ERROR             BIT(15)
+#define SD_INT_STATUS_BUFF_READ_READY   BIT(5)
+#define SD_INT_STATUS_BUFF_WRITE_READY  BIT(4)
 
+/* Tranfer mode bits */
+#define SD_TXFER_MODE_IS_READ     BIT(4)
+#define SD_TXFER_MODE_MULTI_BLOCK (BIT(1) | BIT(5))
 
 struct sd_cmd {
         u8 response_type_select : 2;
@@ -84,10 +89,10 @@ struct sd_cmd commands[] = {
         [SD_CMD7]  =  {SD_CMD_RE_TYPE_48B, 0, 1, 0, 0, 0, SD_CMD7, 0},
         [SD_CMD8]  =  {SD_CMD_RE_TYPE_48,  0, 1, 0, 0, 0, SD_CMD8, 0}, 
         [SD_CMD9]  =  {SD_CMD_RE_TYPE_136, 0, 0, 0, 0, 0, SD_CMD9, 0},
-        [SD_CMD17] =  {SD_CMD_RE_TYPE_48,  0, 1, 0, 0, 0, SD_CMD17, 0},
-        [SD_CMD18] =  {SD_CMD_RE_TYPE_48,  0, 1, 0, 0, 0, SD_CMD18, 0},
-        [SD_CMD24] =  {SD_CMD_RE_TYPE_48,  0, 1, 0, 0, 0, SD_CMD24, 0},
-        [SD_CMD25] =  {SD_CMD_RE_TYPE_48,  0, 1, 0, 0, 0, SD_CMD25, 0},
+        [SD_CMD17] =  {SD_CMD_RE_TYPE_48,  0, 1, 0, 1, 0, SD_CMD17, 0},
+        [SD_CMD18] =  {SD_CMD_RE_TYPE_48,  0, 1, 0, 1, 0, SD_CMD18, 0},
+        [SD_CMD24] =  {SD_CMD_RE_TYPE_48,  0, 1, 0, 1, 0, SD_CMD24, 0},
+        [SD_CMD25] =  {SD_CMD_RE_TYPE_48,  0, 1, 0, 1, 0, SD_CMD25, 0},
         [SD_CMD55] =  {SD_CMD_RE_TYPE_48,  0, 1, 0, 0, 0, SD_CMD55, 0},
         [SD_ACMD41] = {SD_CMD_RE_TYPE_48,  0, 0, 0, 0, 0, 41, 0},
 };
@@ -101,7 +106,7 @@ void sd_wait_cmd()
 {
         while(!sd_dev->int_status)
                 ;
-        
+
 
         /* Read and write clear the interrupt */
         klog_debug("interrupt status is %h\n", sd_dev->int_status);
@@ -119,7 +124,7 @@ u32 sd_get_clock_divider(u32 base_clock, u32 target_rate)
         {
                 divider++;
         }
-        
+
 
         klog_debug("Derived divider of %d: %d / 2 * %d = %d ~= %d\n", divider, base_clock, divider, base_clock / (2* divider), target_rate);
         return divider;
@@ -134,11 +139,11 @@ void sd_setup_clock()
 
         u32 emmc_clock = mb_get_clock_rate(MB_CLOCK_ID_EMMC2);
         sd_dev->host_control_2 = 0;
-        
+
         u32 divider = sd_get_clock_divider(emmc_clock, SD_CLOCK_IDENT);
         u16 clock_control = sd_dev->clock_control;
         klog_debug("Clock control is %h\n", clock_control);
-        
+
         /* Or in the divider to the control register*/
         clock_control &= 0x3f;
         clock_control |= divider << 8;
@@ -167,12 +172,17 @@ void sd_switch_clock_rate(u32 target_rate)
         u16 clock_control = sd_dev->clock_control;
 
         while(sd_dev->present_state & (SD_STATE_CMD_INHIBIT | SD_STATE_DAT_INHIBIT));
-        
 
-        sd_dev->clock_control = clock_control & (~ BIT(2));
+
+        sd_dev->clock_control = clock_control & (~ BIT(0));
         u32 divider = sd_get_clock_divider(emmc_clock, target_rate);
+        clock_control  &= ~(0xff << 8);
         clock_control |= divider << 8;
         clock_control |= (divider & 0x300) >> 2;
+        timer_sleep_ms(50);
+        sd_dev->clock_control = clock_control;
+        while(!(sd_dev->clock_control & SD_CLOCK_CTRL_STABLE))
+                ;
         
         timer_sleep_ms(50);
 }
@@ -184,30 +194,96 @@ void sd_issue_norm_cmd(u32 cmd_idx, u32 arg)
                 sd_issue_norm_cmd(SD_CMD55, sd_dev_state.rca);
         }
         while(sd_dev->present_state & SD_STATE_CMD_INHIBIT);
-        
+
         struct sd_cmd *cmd = &commands[cmd_idx];
         sd_dev->cmd_arg = arg;
         sd_dev->transfer_mode = 0;
         sd_dev->cmd = *(u16 *)cmd;
-        
+
         sd_wait_cmd();
+}
+
+void _sd_data_read(void *_buffer, u64 size)
+{
+        u32 *buffer = (u32 *)_buffer;
+        while(size)
+        {
+                while(!(sd_dev->int_status & SD_INT_STATUS_BUFF_READ_READY))
+                {
+                        klog_debug("Int status is: %h\n", sd_dev->int_status);
+                }
+                u32 blk = 512;
+
+                while(blk)
+                {
+                        *buffer = sd_dev->buffer_data;
+                        buffer++;
+                        blk -= 4;
+                }
+                size--;
+        }
+
+        klog_debug("Data read done!\n");
+
+}
+
+
+void _sd_data_write(void * _buffer, u64 size)
+{
+        u32 *buffer = (u32 *)_buffer;
+        while(1)
+        {
+                while(!(sd_dev->int_status & SD_INT_STATUS_BUFF_WRITE_READY));
+                
+                /* Hardcoded block size */
+                u32 blk = 512;
+
+                while(blk)
+                {
+                        *buffer = sd_dev->buffer_data;
+                        buffer++;
+                        blk -= 4;
+                }
+
+        }
 }
 
 void sd_issue_data_command(u32 cmd_idx, u32 arg)
 {
+        u8 is_read = 0;
+        u8 is_multi = 0;
 
         switch(cmd_idx){
                 case SD_CMD17:
                 case SD_CMD18:
+                        klog_debug("Command is read\n");
+                        is_read = 1;
+                        break;
                 case SD_CMD24:
                 case SD_CMD25:
                         break;
                 default:
-                        klog_warn("Command %h is not a read or write command\n", cmd_idx);
+                        klog_warn("Command %h is not a supported read or write command\n", cmd_idx);
                         return;
         }
 
+        if(cmd_idx == SD_CMD25 || cmd_idx == SD_CMD18)
+        {
+                is_multi = 1;
+        }
+
         while(sd_dev->present_state & (SD_STATE_CMD_INHIBIT | SD_STATE_DAT_INHIBIT));
+
+        if(is_read)
+        {
+                sd_dev->transfer_mode |= SD_TXFER_MODE_IS_READ; 
+        }
+        if(is_multi)
+        {
+                sd_dev->transfer_mode |= SD_TXFER_MODE_MULTI_BLOCK;
+        }
+
+        klog_debug("writing command reg\n");
         struct sd_cmd *cmd = &commands[cmd_idx];
         sd_dev->cmd_arg = arg;
         sd_dev->cmd = *(u16 *)cmd;
@@ -223,21 +299,21 @@ void sd_reset_card()
         {
                 klog_debug("Waiting for reset...\n");
         }
-        
+
         /* Enable VDD1 to operate at 3.3v */
         sd_dev->power_control = 0xf;
         timer_sleep_ms(50);
 
 
         sd_setup_clock();
-        
+
         timer_sleep_ms(50);
         while(sd_dev->present_state & SD_STATE_CMD_INHIBIT);
         sd_dev->int_status_enable = 0xffffffff;
 
 
         timer_sleep_ms(50);
-        
+
         /* Clear interrupts we recieved */
         u32 int_status = sd_dev->int_status;
         sd_dev->int_status = int_status;
@@ -245,7 +321,7 @@ void sd_reset_card()
 
         sd_issue_norm_cmd(SD_CMD0, 0);
 
-        
+
         /* Do we have a card we can work with */
         klog_debug("Check card suitability...\n");
         sd_issue_norm_cmd(SD_CMD8, 0x1AA);
@@ -279,7 +355,7 @@ void sd_reset_card()
                 }
         }
 
-        
+
         timer_sleep_ms(50);
         klog_debug("int status %h\n", sd_dev->int_status);
         sd_issue_norm_cmd(SD_CMD2, 0xff);
@@ -291,27 +367,52 @@ void sd_reset_card()
         sd_dev_state.rca = (sd_dev->response[0] >> 16) & 0xffff;
         klog_debug("Read card RCA as %h\n", sd_dev_state.rca);
 
-        
+
         klog_debug("Card state is %h\n", (sd_dev->response[0] >> 8) & 0xf);
 
         sd_issue_norm_cmd(SD_CMD9, sd_dev_state.rca << 16 | 0xffff );
         klog_debug("card status descr: %h, %h, %h, %h", sd_dev->response[0], sd_dev->response[1], sd_dev->response[2], sd_dev->response[3]);
-        
+
+        sd_issue_norm_cmd(SD_CMD7, sd_dev_state.rca << 16 | 0xffff);
         /* std isnt particularly clear when youre supposed to do this */
-        // sd_switch_clock_rate(SD_CLOCK_NORMAL);
+        sd_switch_clock_rate(SD_CLOCK_NORMAL);
+        //timer_sleep_ms(1000);
 }
 
 void sd_read(u8 *buffer, u64 size)
 {
-        /* Ensure we have selected the correct card for dt transfer */
-        sd_issue_norm_cmd(SD_CMD7, sd_dev_state.rca << 16 | 0xffff);
-        
+        u32 cmd;
+        u32 lba = sd_dev_state.offset / 512;
+        u32 block_count = (size / 512) + ((size % 512) ? 1 : 0);
 
+        //klog_debug("Ensure card is in data state\n");
+        // sd_issue_norm_cmd(SD_CMD7, sd_dev_state.rca << 16 | 0xffff);
+
+
+        if(block_count == 1)
+        {
+                klog_debug("Block count is 1, executing SD_CMD17\n");
+                cmd = SD_CMD17;
+        }
+        else
+        {
+                klog_debug("Block count is >1, executing SD_CMD18\n");
+                cmd = SD_CMD18;
+        }
+        sd_dev->block_size = 512;
+        sd_dev->block_cnt = block_count;
+
+        sd_issue_data_command(cmd, lba);
+        _sd_data_read(buffer, block_count);
+        klog_debug("done!\n");
+
+        sd_wait_cmd();
 
 }
 
 void sd_seek(u64 offset)
 {
+        /* Set the byte offset into the card */
         sd_dev_state.offset = offset;
 }
 

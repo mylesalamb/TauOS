@@ -49,16 +49,16 @@ void kinit(void *dtb)
         kmain();
 }
 
-struct mbr_header mbr;
+__attribute__((aligned(4))) struct mbr_header mbr;
 
 void kmain()
 {
         printk("Booted to TauOS kernel!\n\n");
         printk("Initialise EMMC2\n");
-
         sd_init(PHYS_BASE_ADDR);
         sd_seek(0);
         sd_read(&mbr, 512);
+        printk("\n\n");
         mbr_dump(&mbr);
 
 }

@@ -1,7 +1,7 @@
 #ifndef MBR_H
 #define MBR_H 1
 
-struct mbr_partition_entry{
+struct __attribute__((packed)) mbr_partition_entry{
         u8 status;
         u8 chs_addr_start[3];
         u8 type;
@@ -10,7 +10,7 @@ struct mbr_partition_entry{
         u32 lba_len;
 };
 
-struct mbr_header{
+struct __attribute__((packed)) mbr_header{
         u8 bootstrap[446];
         struct mbr_partition_entry partition[4];
         u16 boot_signature;
