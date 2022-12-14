@@ -14,33 +14,41 @@ It has only been tested on Artix(runit) but should also work on other distros.
 This project uses an arm64 cross compiler. To get the cross-compiler used by this project run.
 
 ```
-./build.sh toolchain
+./tau.sh get toolchain
 ```
 
 To then build the operating system run.
 
 ```
-./build.sh os 
+./tau.sh build os 
 ```
 
-To then transfer the bootloader/kernel to an SD card run.
+If you are using an SD card with an existing install of Raspberry Pi OS, you can
+transfer the bootloader to the card with.
 
 ```
-sudo ./build.sh sd $DEV
+sudo ./tau.sh dist bootloader
 ```
-
-where `$DEV` represents the name of the SD device's boot partition. This value
-defaults to `mmcblk0p1`.
-
 To run the development bootloader run.
 
 ```
-sudo ./build.sh chain
+sudo ./tau.sh run chain 
 ```
 
 You can then power on the device, and the previously built kernel will be loaded to the Pi's memory
 and will be executed. By default, the kernel is loaded to `0x80000`. Note that this
 is different to the load address of `0x200000` used by the newer Raspberry Pi firmware.
+
+
+If you dont have an existing install of raspberry pi on your SD card, the following set
+of commands will create a Raspberry Pi compatible setup
+
+```
+./tau.sh get firmware
+sudo ./tau.sh build sd
+sudo ./tau.sh dist firmware
+sudo ./tau.sh dist bootloader
+```
 
 
 ## Design Decisions
