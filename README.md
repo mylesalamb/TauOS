@@ -77,7 +77,8 @@ on the board, so networking is something that I will also work on.
 - [x] Timer interrupts
 - [x] DMA controller Setup
 - [x] EMMC2 sd controller setup 
-- [ ] MMU initialisation
+- [ ] MMU initialisation (identity mapping)
+- [ ] MMU initialisation (higher-half)
 - [ ] PMM -> VMM allocator stack (kmalloc, kcalloc, kpalloc, upalloc...)
 - [ ] Minimal FAT32 FS driver
 - [ ] User processes

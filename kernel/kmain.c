@@ -12,6 +12,7 @@
 #include <lib/io.h>
 #include <gic.h>
 #include <timer.h>
+#include <mm/mmu.h>
 
 // As visible to the arm
 #define PHYS_BASE_ADDR 0xFE000000
@@ -35,8 +36,9 @@ void kinit(void *dtb)
         io_init(&muart_console);
         muart_init();
         klog_init(&muart_console);
+        mmu_dump_entries();
         fb_init();
-
+        
         io_init(&fb_console);
         /* Setup interrupts for the bootcore */
         irq_init(&gic_interface, PHYS_BASE_ADDR);
@@ -54,6 +56,9 @@ __attribute__((aligned(4))) struct mbr_header mbr;
 void kmain()
 {
         printk("Booted to TauOS kernel!\n\n");
+        printk("Dumping page tables to uart!\n");
+
+        mmu_dump_entries();
         printk("Initialise EMMC2\n");
         sd_init(PHYS_BASE_ADDR);
         sd_seek(0);

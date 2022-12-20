@@ -22,17 +22,30 @@ SECTIONS
         __DATA_START = .;
         .data :
         {
-                *(.data*)
+                *(.data)
         }
         . = ALIGN(4096);
         __DATA_END = .;
  
         __BSS_START = .;
-        .bss :
+        .bss : ALIGN(4096)
         {
-                *(.bss*)
+                *(.bss)
         }
-        . = ALIGN(4096); 
-        __BSS_END = .;
+        /* Initial page tables */
+        . = ALIGN(4096);
+        __pgd_start = .;
+        . += 4096;
+        __pgd_end = .;
+        __pud_start = .;
+        . += 4096;
+        __pud_end = .;
+
+        __pmd_start = .;
+        . += 4096;
+        __pmd_end = .;
+
         __END = .;
+
+
 }
