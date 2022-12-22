@@ -15,7 +15,9 @@
 #include <mm/mmu.h>
 
 // As visible to the arm
-#define PHYS_BASE_ADDR 0xFE000000
+//#define PHYS_BASE_ADDR 0xFE000000
+#define PHYS_BASE_ADDR 0x400000
+
 void kmain();
 void kinit(void *dtb)
 {
@@ -28,6 +30,10 @@ void kinit(void *dtb)
         /* Setup various addresses on the board*/
         aux_init(PHYS_BASE_ADDR);
         gpio_init(PHYS_BASE_ADDR);
+        muart_init();
+        klog_init(&muart_console);
+        klog_debug("OK?\n");
+
         mb_init(PHYS_BASE_ADDR);
         dma_init(PHYS_BASE_ADDR);
         timer_init(PHYS_BASE_ADDR);
@@ -58,7 +64,6 @@ void kmain()
         printk("Booted to TauOS kernel!\n\n");
         printk("Dumping page tables to uart!\n");
 
-        mmu_dump_entries();
         printk("Initialise EMMC2\n");
         sd_init(PHYS_BASE_ADDR);
         sd_seek(0);

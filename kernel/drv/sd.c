@@ -336,7 +336,7 @@ void sd_reset_card()
 
         sd_issue_norm_cmd(SD_ACMD41, 0x0);
         u32 ocr = sd_dev->response[0];
-        klog_debug("Read ocr as %h", ocr);
+        klog_debug("Read ocr as %h\n", ocr);
 
 
         /* In the init phase, cards have an assumed RCA of 0 */
@@ -371,7 +371,7 @@ void sd_reset_card()
         klog_debug("Card state is %h\n", (sd_dev->response[0] >> 8) & 0xf);
 
         sd_issue_norm_cmd(SD_CMD9, sd_dev_state.rca << 16 | 0xffff );
-        klog_debug("card status descr: %h, %h, %h, %h", sd_dev->response[0], sd_dev->response[1], sd_dev->response[2], sd_dev->response[3]);
+        klog_debug("Card status descr: %h, %h, %h, %h\n", sd_dev->response[0], sd_dev->response[1], sd_dev->response[2], sd_dev->response[3]);
 
         sd_issue_norm_cmd(SD_CMD7, sd_dev_state.rca << 16 | 0xffff);
         /* std isnt particularly clear when youre supposed to do this */
@@ -419,7 +419,6 @@ void sd_seek(u64 offset)
 void sd_init(u64 base_addr)
 {
         sd_dev = (base_addr + SD_REGS_OFFSET);
-        sd_dump_regs();
         sd_reset_card();
 }
 

@@ -26,6 +26,30 @@ TauOS boot entrypoint
 #define CPACR_EL1_SIMD (3 << 20)
 #define CPACR_EL1_VAL CPACR_EL1_SIMD
 
+/* MMU regs and flags */
+#define MAIR_NORM_IDX   0x0
+#define MAIR_DEVICE_IDX 0x1
+#define MAIR_NORM_VALUE 0x44
+#define MAIR_DEVICE_VALUE 0x00
+#define MAIR_EL1_VAL (MAIR_NORM_VALUE << (8 * MAIR_NORM_IDX)) | (MAIR_DEVICE_VALUE << (8 * MAIR_DEVICE_IDX))
+
+#define TCR_EL1_T0SZ 0x10
+#define TCR_EL1_T1SZ (0x10 << 16)
+#define TCR_EL1_TG1 (0x2 << 30)
+#define TCR_EL1_VAL (TCR_EL1_TG1 | TCR_EL1_T1SZ | TCR_EL1_T0SZ )
+
+#define MMU_DESCR_ACCESS BIT(10)
+#define MMU_DESCR_VALID BIT(0)
+#define MMU_DESCR_INT  BIT(1)
+#define MMU_DESCR_MAIR_SHIFT 2
+#define MMU_DESCR_NS    BIT(2)
+#define MMU_DESCR_EL1_RWX BIT(54)
+
+#define MMU_TABLE_FLAGS (MMU_DESCR_VALID | MMU_DESCR_INT )
+#define MMU_K_BLK_FLAGS (MMU_DESCR_VALID | MMU_DESCR_NS | MMU_DESCR_ACCESS | MMU_DESCR_EL1_RWX | (MAIR_NORM_IDX   << 2))
+#define MMU_K_DEV_FLAGS (MMU_DESCR_VALID | MMU_DESCR_NS | MMU_DESCR_ACCESS | MMU_DESCR_EL1_RWX | (MAIR_DEVICE_IDX << 2))
+
+
 .globl _start
 _start:
         // Set spsr
@@ -55,14 +79,12 @@ el1_entry:
         
         /* Set the stack pointer just below the kernel */
         /* We can use this memory until we turn the mmu on */
-        ldr x5, =__LOW_MEMORY
-        mov sp, x5
         
         // We actually account for the case of
         // bss < 64 bits, as we align to page size
         // bss sizes -> [0,4kb,8kb...]
-        ldr x5, =__BSS_START
-        ldr x6, =__END
+        adr x5, __BSS_START
+        adr x6, __END
         sub x6, x6, x5 // bss size in byte
         lsr x6, x6, #3 // bss size in 64 bits
 bss_loop: 
@@ -73,7 +95,26 @@ bss_loop:
 
 bss_loop_end:
         bl __mmu_bootstrap_tables
-        bl kinit
+
+        ldr x1, =MAIR_EL1_VAL
+        msr mair_el1, x1
+
+        ldr x1, =TCR_EL1_VAL
+        msr tcr_el1, x1
+
+        adrp x1, __pgd_start
+        msr ttbr0_el1, x1
+
+        ldr x3, =kinit
+        ldr x1, =__kernel_init_stack
+        mov sp, x1
+
+        mov x1, #SCTLR_EL1_MMU_ENABLE
+        mrs x2, sctlr_el1
+        orr x1, x1, x2
+        msr sctlr_el1, x1
+
+        blr x3
 
 // Secondary core, and main [if it returns] should halt 
 core_hang:
@@ -84,10 +125,37 @@ core_hang:
 /* TODO: refactor this absolute rubbish assembler */
 /* Some functions to bootstrap a minimal set of tables that we can work with */
 /* So that we can jump to C and map peripherals */
+/*
+ * x0: physical address of the page table
+ * x1: physical address that we are mapping
+ * x2: start of the virtual region that we are mapping
+ * x3: end of the virtual region that we are mapping
+ * x4: flags to be added to the lower attributes of the entries
+ */
 __mmu_alloc_term_entry:
-        stp x0, x30, [sp, #-16]!
+        
+        /* vaddr that we are mapping as index*/
+        lsr x2, x2, #21
+        and x2, x2, #0x1ff
 
-        ldp x0, x30, [sp], #16
+        /* End index */
+        lsr x3, x3, #21
+        and x3, x3, #0x1ff
+
+        /* Shift of the low bits from the phys addr, could use and here instead*/
+        lsr x1, x1, #21
+        lsl x1, x1, #21
+        orr x1, x1, x4
+
+#define P_STEP (1024 * 1024 * 2)
+        
+__alloc_loop:
+        str x1, [x0, x2, lsl #3]
+        add x2, x2, #1
+        add x1, x1, #P_STEP
+        cmp x2, x3
+        b.ls __alloc_loop
+        
         ret
 
 /*
@@ -99,41 +167,54 @@ __mmu_alloc_term_entry:
  * r3: address of the next page table
  */
 __mmu_alloc_int_entry:
-        stp x0, x30, [sp, #-16]!
-        stp x1, x2, [sp, #-16]!
-        stp x3, xzr, [sp, #-16]!
 
         /* Index in the page table*/
         lsr x1, x1, x2
         and x1, x1, #0x1ff 
 
         /* Indicate that descriptor is valid and refers to a lower level table*/
-        orr x3, x3, #3
+        orr x3, x3, x4
         /* Store the pointer to next in the page table at byte x1 mul 8*/
         str x3, [x0, x1, lsl #3] 
 
-
-        ldp x3, xzr, [sp], #16
-        ldp x1, x2, [sp], #16
-        ldp x0, x30, [sp], #16
         ret
 
 __mmu_bootstrap_tables:
-        stp x0, x30, [sp, #-16]!
+        mov x29, x30
         
         /* Prepare pgd */
         adrp x0, __pgd_start  
         adrp x1, __TEXT_START 
         mov x2, #39
         adrp x3, __pud_start
+        ldr x4, =MMU_TABLE_FLAGS
         bl __mmu_alloc_int_entry
 
 
         /* Prepare pud */
-        mov x0, x3
+
+        adrp x0, __pud_start
+        adrp x1, __TEXT_START 
         mov x2, #30
         adrp x3, __pmd_start
+        ldr x4, =MMU_TABLE_FLAGS
         bl __mmu_alloc_int_entry
+        
+        /* prepare pmd*/
+        adrp x0, __pmd_start
+        mov x1, #0x80000
+        adrp x2, __TEXT_START
+        adrp x3, __END
+        ldr x4, =MMU_K_BLK_FLAGS
+        
+        bl __mmu_alloc_term_entry
 
-        ldp x0, x30, [sp], #16
+        /* Remap the peripheral base address */
+        mov x1, #0xfe000000
+        ldr x2, =0x400000
+        ldr x3, =0x600000
+        ldr x4, =MMU_K_DEV_FLAGS
+
+        bl __mmu_alloc_term_entry
+        mov x30, x29
         ret
