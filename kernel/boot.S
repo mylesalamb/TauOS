@@ -77,9 +77,6 @@ el1_entry:
         and x5, x5, #3
         cbnz x5, core_hang
         
-        /* Set the stack pointer just below the kernel */
-        /* We can use this memory until we turn the mmu on */
-        
         // We actually account for the case of
         // bss < 64 bits, as we align to page size
         // bss sizes -> [0,4kb,8kb...]
@@ -102,8 +99,10 @@ bss_loop_end:
         ldr x1, =TCR_EL1_VAL
         msr tcr_el1, x1
 
-        adrp x1, __pgd_start
+        adrp x1, __init_pgd
         msr ttbr0_el1, x1
+        adrp x1, __pgd_start
+        msr ttbr1_el1, x1
 
         ldr x3, =kinit
         ldr x1, =__kernel_init_stack
@@ -131,28 +130,29 @@ core_hang:
  * x2: start of the virtual region that we are mapping
  * x3: end of the virtual region that we are mapping
  * x4: flags to be added to the lower attributes of the entries
+ * x5: step size, number of bytes encompassed in a singular entry
+ * x6: shift to apply to the address to get the index
  */
 __mmu_alloc_term_entry:
         
         /* vaddr that we are mapping as index*/
-        lsr x2, x2, #21
+        lsr x2, x2, x6
         and x2, x2, #0x1ff
 
         /* End index */
-        lsr x3, x3, #21
+        lsr x3, x3, x6
         and x3, x3, #0x1ff
 
         /* Shift of the low bits from the phys addr, could use and here instead*/
-        lsr x1, x1, #21
-        lsl x1, x1, #21
+        lsr x1, x1, x6
+        lsl x1, x1, x6
         orr x1, x1, x4
 
-#define P_STEP (1024 * 1024 * 2)
         
 __alloc_loop:
         str x1, [x0, x2, lsl #3]
         add x2, x2, #1
-        add x1, x1, #P_STEP
+        add x1, x1, x5
         cmp x2, x3
         b.ls __alloc_loop
         
@@ -179,12 +179,40 @@ __mmu_alloc_int_entry:
 
         ret
 
+/* So we do two things here, we bootstrap */
+/* a basic identity mapping for the lower half, so that we can do a jump to the higher half */
+/* We do the identity map, with a l2 / 1gb block descriptor */
+/* We do the higher half mapping with 4kb block descriptors*/
+/* Why this way? our kernel expects a load address of 0x80000*/
+/* Our lower half identity map must preserve this */
+/* and we want to load our higher half part from 0xffff0000....*/
 __mmu_bootstrap_tables:
         mov x29, x30
         
+        /* Prepare init pgd */
+        adrp x0, __init_pgd
+        adrp x1, __TEXT_START
+        mov x2, #30
+        adrp x3, __init_pud
+        ldr x4, =MMU_TABLE_FLAGS
+        bl __mmu_alloc_int_entry
+
+
+        /* Prepare 1gb block mapping */
+        adr x0, __init_pud
+        mov x1, #0
+        mov x2, #0
+        mov x3, 1
+        lsr x3, x3, #30 //40000000
+        ldr x4, =MMU_K_BLK_FLAGS
+        ldr x5, =(1024 * 1024 * 1024)
+        ldr x6, =30
+        bl __mmu_alloc_term_entry
+
+
         /* Prepare pgd */
         adrp x0, __pgd_start  
-        adrp x1, __TEXT_START 
+        ldr x1, =__TEXT_START 
         mov x2, #39
         adrp x3, __pud_start
         ldr x4, =MMU_TABLE_FLAGS
@@ -194,7 +222,7 @@ __mmu_bootstrap_tables:
         /* Prepare pud */
 
         adrp x0, __pud_start
-        adrp x1, __TEXT_START 
+        ldr x1, =__TEXT_START 
         mov x2, #30
         adrp x3, __pmd_start
         ldr x4, =MMU_TABLE_FLAGS
@@ -202,18 +230,30 @@ __mmu_bootstrap_tables:
         
         /* prepare pmd*/
         adrp x0, __pmd_start
-        mov x1, #0x80000
-        adrp x2, __TEXT_START
-        adrp x3, __END
-        ldr x4, =MMU_K_BLK_FLAGS
+        ldr x1, =__TEXT_START 
+        mov x2, #21
+        adrp x3, __pte_start
+        ldr x4, =MMU_TABLE_FLAGS
+        bl __mmu_alloc_int_entry
         
+        /* 4kb descriptors are weird and need an extra bit? */
+        adrp x0, __pte_start
+        mov x1, #0x80000
+        ldr x2, =__TEXT_START
+        ldr x3, =__END
+        ldr x4, =(MMU_K_BLK_FLAGS | MMU_DESCR_INT)
+        ldr x5, =(1024 * 4 )
+        ldr x6, =12
         bl __mmu_alloc_term_entry
 
         /* Remap the peripheral base address */
+        adrp x0, __pmd_start
         mov x1, #0xfe000000
         ldr x2, =0x400000
         ldr x3, =0x600000
         ldr x4, =MMU_K_DEV_FLAGS
+        ldr x5, =(1024 * 1024 * 2)
+        ldr x6, =21
 
         bl __mmu_alloc_term_entry
         mov x30, x29

@@ -16,7 +16,8 @@
 
 // As visible to the arm
 //#define PHYS_BASE_ADDR 0xFE000000
-#define PHYS_BASE_ADDR 0x400000
+// #define PHYS_BASE_ADDR 0x400000
+#define PHYS_BASE_ADDR (0x400000 | 0xffff000000000000)
 
 void kmain();
 void kinit(void *dtb)

@@ -65,6 +65,13 @@ will not.
 I have a SPI ethernet board which is much easier to program than the PCI ethernet
 on the board, so networking is something that I will also work on.
 
+### Memory Map
+
+ TODO still need to figure out what exactly I'm doing here
+
+- 0x0000000000000000 - 0x0000ffffffffffff Userspace
+- 0xffff000000000000 - 
+
 ## Roadmap
 
 - [x] Mini UART output
@@ -77,8 +84,8 @@ on the board, so networking is something that I will also work on.
 - [x] Timer interrupts
 - [x] DMA controller Setup
 - [x] EMMC2 sd controller setup 
-- [ ] MMU initialisation (identity mapping)
-- [ ] MMU initialisation (higher-half)
+- [x] MMU initialisation (identity mapping)
+- [x] MMU initialisation (higher-half)
 - [ ] PMM -> VMM allocator stack (kmalloc, kcalloc, kpalloc, upalloc...)
 - [ ] Minimal FAT32 FS driver
 - [ ] User processes
