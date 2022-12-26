@@ -7,26 +7,23 @@ SECTIONS
         __LOW_MEMORY = .;
         __START = .;
         __TEXT_START = .;
-        .text : {
+        .text : ALIGN(4096) {
                 KEEP(*(.text.boot))
                 *(.text)
         }
-        . = ALIGN(4096);
         __TEXT_END = .;
         __RODATA_START = .;
-        .rodata :
+        .rodata : ALIGN(4096)
         {
                 *(.rodata)
         }
-        . = ALIGN(4096);
         __RODATA_END = .;
  
         __DATA_START = .;
-        .data :
+        .data : ALIGN(4096)
         {
                 *(.data)
         }
-        . = ALIGN(4096);
         __DATA_END = .;
  
         __BSS_START = .;
@@ -36,9 +33,11 @@ SECTIONS
         }
 
         /* Initial page tables for the higher half */
-        . = ALIGN(4096);
+        . = ALIGN(128);
         . += 4096;
         __kernel_init_stack = .;
+
+        . = ALIGN(4096);
         __pgd_start = .;
         . += 4096;
         __pgd_end = .;

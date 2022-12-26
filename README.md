@@ -67,10 +67,15 @@ on the board, so networking is something that I will also work on.
 
 ### Memory Map
 
- TODO still need to figure out what exactly I'm doing here
+At the moment, the operating system will map / use only the first gigabyte of
+memory as that gives the most simple memory map to work with, and realistically
+this operating system wont need much to run at all.
 
+```
 - 0x0000000000000000 - 0x0000ffffffffffff Userspace
-- 0xffff000000000000 - 
+- 0xffff000000000000 - 0xffff00000c000000 Kernel code and data, including page manager
+...
+```
 
 ## Roadmap
 
@@ -95,7 +100,7 @@ on the board, so networking is something that I will also work on.
 
 * BASH, other shells will probably work as well
 * GNU Make, I use some GNU specific stuff so other varients of Make will probably not work
-* ARM cross-compiler, although you can get that through `./build.sh toolchain`
+* ARM cross-compiler, although you can get that through `./tau.sh get toolchain`
 * x86 C Compiler, for tools shipped with the project
 
 ## Resources Used

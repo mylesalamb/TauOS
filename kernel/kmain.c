@@ -13,6 +13,7 @@
 #include <gic.h>
 #include <timer.h>
 #include <mm/mmu.h>
+#include <mm/pmm.h>
 
 // As visible to the arm
 //#define PHYS_BASE_ADDR 0xFE000000
@@ -31,11 +32,13 @@ void kinit(void *dtb)
         /* Setup various addresses on the board*/
         aux_init(PHYS_BASE_ADDR);
         gpio_init(PHYS_BASE_ADDR);
+        mb_init(PHYS_BASE_ADDR);
         muart_init();
         klog_init(&muart_console);
         klog_debug("OK?\n");
+        mmu_dump_entries();
+        pmm_init();
 
-        mb_init(PHYS_BASE_ADDR);
         dma_init(PHYS_BASE_ADDR);
         timer_init(PHYS_BASE_ADDR);
 

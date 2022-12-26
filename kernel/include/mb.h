@@ -88,6 +88,9 @@ u32 mb_get_board_model();
 u32 mb_get_firmware_revision();
 u32 mb_get_board_revision();
 u32 mb_get_clock_rate(u32);
+u32 mb_get_arm_mem();
+u64 mb_get_vc_mem();
+
 void mb_set_clock_rate(u32, u32);
 struct mbox_hdr *mb_recv(u8);
 struct mbox_tag *mb_get_tag(struct mbox_hdr *hdr, u32 code);
