@@ -30,5 +30,5 @@
 
 void mmu_dump_entries();
 void *mmu_vtp(const void *p);
-void mmu_map_page(u64, u64, u64);
+void mmu_early_map_page(u64, u64, u64);
 #endif

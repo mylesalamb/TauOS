@@ -53,10 +53,13 @@ sudo ./tau.sh dist bootloader
 
 ## Design Decisions
 
-As this operating system will realistically only ever target one board, the
-Raspberry Pi 4b, I will probably develop it as a monolithic kernel. As the hardware
-fixed. Maybe I'll port it to the Raspberry Pi 5, or a mangopi-mq, whenever I am in
-posession of one of those boards.
+I plan to develop this operating system based around a monolithic kernel as that
+appears to be the easiest way to get things works in the beginning. Once the operating
+system can get programs from disk, load them into memory and execute them. I plan to
+port it so that the kernel will support being run on either a Raspberry Pi 4b (supported at the moment)
+and the QEMU virt board for aarch64, as a means of working with an easier susbtrate for
+developing functionality on the PCI bus. The Raspberry Pi 4Bs broadcom implementation
+of PCI appears quite weird...
 
 In its current state the operating system only supports SDHC SD cards, as in thats
 the only the only type of SD card I have tested with, SDUC might work. SDSC definitely
@@ -74,8 +77,13 @@ this operating system wont need much to run at all.
 ```
 - 0x0000000000000000 - 0x0000ffffffffffff Userspace
 - 0xffff000000000000 - 0xffff00000c000000 Kernel code and data, including page manager
+- 0xfffffe0000000000 - 0xffffffffffffffff Remapped peripherals
 ...
 ```
+
+I map the PMM bitmap immediately after the kernel as there will (always?) be spaces
+left in the PTE that maps the kernel, as this appears to be a relatively easy way
+to kickstart the memory management subsystem of the kernel
 
 ## Roadmap
 
@@ -91,9 +99,11 @@ this operating system wont need much to run at all.
 - [x] EMMC2 sd controller setup 
 - [x] MMU initialisation (identity mapping)
 - [x] MMU initialisation (higher-half)
-- [ ] PMM -> VMM allocator stack (kmalloc, kcalloc, kpalloc, upalloc...)
+- [x] PMM (Bitmap page allocator)
+- [ ] VMM allocator stack (kmalloc, kcalloc, kpalloc, upalloc...)
 - [ ] Minimal FAT32 FS driver
 - [ ] User processes
+- [ ] Refactor / Port to qemu virt board
 - [ ] SPI Ethernet (ENC28J60)
 
 ## Dependencies

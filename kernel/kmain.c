@@ -15,10 +15,11 @@
 #include <mm/mmu.h>
 #include <mm/pmm.h>
 
-// As visible to the arm
 //#define PHYS_BASE_ADDR 0xFE000000
-// #define PHYS_BASE_ADDR 0x400000
 #define PHYS_BASE_ADDR (0x400000 | 0xffff000000000000)
+#define DEVICE_MMIO_BEGIN 0x0FC000000
+#define DEVICE_MMIO_END   0x100000000
+#define PHYS_REAL 0xfffffe0000000000 
 
 void kmain();
 void kinit(void *dtb)
@@ -35,10 +36,12 @@ void kinit(void *dtb)
         mb_init(PHYS_BASE_ADDR);
         muart_init();
         klog_init(&muart_console);
-        klog_debug("OK?\n");
         mmu_dump_entries();
         pmm_init();
-
+        vmm_map_mmio(PHYS_REAL, DEVICE_MMIO_BEGIN, DEVICE_MMIO_END);
+        mmu_dump_entries();
+        while(1)
+                ;
         dma_init(PHYS_BASE_ADDR);
         timer_init(PHYS_BASE_ADDR);
 

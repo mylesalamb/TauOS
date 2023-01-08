@@ -1,4 +1,5 @@
 #include <types.h>
+#include <mm/pmm.h>
 #include <klog.h>
 
 #define MMU_D_COUNT 512
@@ -13,6 +14,7 @@ extern u32 __pte_start;
 #define PG_DESCR_ADDR(x) (x & (0x7ffffffff << 12))
 
 #define GRANULE 4096
+#define ENTIRES 512
 
 #define PG_IDX_MASK  0x1ff
 #define PGD_INDEX 39 
@@ -99,7 +101,7 @@ void _mmu_map_descr(u64 *table, u64 virt_addr, u64 addr_shift, u64 phys_addr, u6
 /* Dumb non allocating page mapper */
 /* Need this as we need to map the page allocator */
 /* Bitmap before we can allocate anymore page tables */
-void mmu_map_page(u64 virt_addr, u64 phys_addr, u64 flags)
+void mmu_early_map_page(u64 virt_addr, u64 phys_addr, u64 flags)
 {
         if(phys_addr & (GRANULE - 1))
         {
@@ -124,5 +126,11 @@ void mmu_map_page(u64 virt_addr, u64 phys_addr, u64 flags)
         klog_debug("pte addr: %h\n", pte);
 
         _mmu_map_descr(pte, virt_addr, PTE_INDEX, phys_addr, flags);
+}
+
+void mmu_map_range(u64 virt, u64 begin, u64 end)
+{
+        u64 *pgd = (u64 *)&__pgd_start;
+
 }
 
