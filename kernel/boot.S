@@ -240,7 +240,7 @@ __mmu_bootstrap_tables:
         adrp x0, __pte_start
         mov x1, #0x80000
         ldr x2, =__TEXT_START
-        ldr x3, =__K_END
+        ldr x3, =__END
         ldr x4, =(MMU_K_BLK_FLAGS | MMU_DESCR_INT)
         ldr x5, =(1024 * 4 )
         ldr x6, =12

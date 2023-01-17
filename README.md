@@ -75,8 +75,9 @@ memory as that gives the most simple memory map to work with, and realistically
 this operating system wont need much to run at all.
 
 ```
-- 0x0000000000000000 - 0x0000ffffffffffff Userspace
-- 0xffff000000000000 - 0xffff00000c000000 Kernel code and data, including page manager
+- 0x0000000000000000 - 0x0000ffffffffffff Userspace (256Tb)
+- 0xffff000000000000 - 0xffff000001000000 Kernel code and data, including page manager (16Mb)
+- 0xffff000002000000 -                    Kernel virt manager, memory manager for early allocation and managment of raw pages
 - 0xfffffe0000000000 - 0xffffffffffffffff Remapped peripherals
 ...
 ```

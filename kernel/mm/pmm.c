@@ -5,7 +5,7 @@
 #include <lib/bitmap.h>
 #include <lib/mem.h>
 
-extern u32 __K_END;
+extern u32 __END;
 extern u32 __START;
 
 #define GRANULE 4096
@@ -23,8 +23,8 @@ void _pmm_mark(u64);
 /* Figure out where the end of the kernel is as a physical address */
 void pmm_init()
 {
-        void *phys_end = mmu_vtp(&__K_END);
-        klog_debug("Detected end of kernel as %h (%h)\n", phys_end, &__K_END);
+        void *phys_end = mmu_vtp(&__END);
+        klog_debug("Detected end of kernel as %h (%h)\n", phys_end, &__END);
 
         u32 phys_mem = mb_get_arm_mem();
         u64 vc_mem_attrs = mb_get_vc_mem();
@@ -40,7 +40,7 @@ void pmm_init()
         u64 map_count = ROUNDED_DIV(entries, page_entries);
         klog_debug("PMM requires %d pages to map physical memory\n", map_count);
 
-        u64 pmm_virt = (u64)( (u8 *)&__K_END + GRANULE);
+        u64 pmm_virt = (u64)( (u8 *)&__END + GRANULE);
         klog_debug("Mapping from %h (%h)\n", pmm_virt, mmu_vtp(pmm_virt));
 
 
@@ -51,7 +51,7 @@ void pmm_init()
                 pmm_virt += GRANULE;
         }
 
-        pmm_virt = (u64)( (u8 *)&__K_END + GRANULE);
+        pmm_virt = (u64)( (u8 *)&__END + GRANULE);
 
         memset((void *)pmm_virt, 0, map_count * GRANULE);
         pages = pmm_virt;
@@ -59,7 +59,7 @@ void pmm_init()
 
         /* Mark the memory where the kernel is as used */
         klog_debug("Marking kernel area as used\n");
-        for(u64 i = mmu_vtp(&__START); i < mmu_vtp(&__K_END); i += GRANULE)
+        for(u64 i = mmu_vtp(&__START); i < mmu_vtp(&__END); i += GRANULE)
         {
                 _pmm_mark(i / GRANULE);
         }
@@ -114,5 +114,4 @@ void pfree(u64 p)
         }
         bitmap_clr_bit(pages, p);
         page_used--;
-
 }

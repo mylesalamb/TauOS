@@ -1,5 +1,7 @@
 #include <types.h>
+#include <mm/mmu.h>
 #include <mm/pmm.h>
+#include <lib/mem.h>
 #include <klog.h>
 
 #define MMU_D_COUNT 512
@@ -16,11 +18,25 @@ extern u32 __pte_start;
 #define GRANULE 4096
 #define ENTIRES 512
 
+#define PGD_LEVEL 3
+#define PUD_LEVEL 2
+#define PMD_LEVEL 1
+#define PTE_LEVEL 0
+
+#define PTE_RANGE (ENTRIES * GRANULE)
+#define PMD_RANGE (ENTRIES * PTE_RANGE)
+#define PUD_RANGE (ENTRIES * PMD_RANGE)
+#define PGD_RANGE (ENTRIES * PUD_RANGE)
+
+/* Macros for extracting indexes from virtual addresses */
+#define ADDR_BITS 12
+#define LEVEL_SHIFT 9
+#define PGD_INDEX (ADDR_BITS + (PGD_LEVEL * LEVEL_SHIFT)) 
+#define PUD_INDEX (ADDR_BITS + (PUD_LEVEL * LEVEL_SHIFT))
+#define PMD_INDEX (ADDR_BITS + (PMD_LEVEL * LEVEL_SHIFT))
+#define PTE_INDEX (ADDR_BITS + (PTE_LEVEL * LEVEL_SHIFT))
 #define PG_IDX_MASK  0x1ff
-#define PGD_INDEX 39 
-#define PUD_INDEX 30
-#define PMD_INDEX 21
-#define PTE_INDEX 12
+#define VADDR_IDX(x, s) ( (x >> s) & PG_IDX_MASK )
 
 void mmu_dump_entries()
 {
@@ -65,7 +81,7 @@ void *mmu_vtp(const void *p)
 {
         /* At the moment this only works for code that we have mapped in */
         /* There are real arm instructions that help with this*/
-        
+
         u64 n = (u64)p;
         n &= ~0xffff000000000000;
         n += 0x80000;
@@ -127,10 +143,64 @@ void mmu_early_map_page(u64 virt_addr, u64 phys_addr, u64 flags)
 
         _mmu_map_descr(pte, virt_addr, PTE_INDEX, phys_addr, flags);
 }
-
-void mmu_map_range(u64 virt, u64 begin, u64 end)
+/* Given a virtual address, map the table (table), at level */
+void mmu_map_table(u64 v, u64 *t, u8 l)
 {
-        u64 *pgd = (u64 *)&__pgd_start;
 
 }
 
+/* To map memory we need to be able to alter page */
+void mmu_map_range(u64 virt, u64 begin, u64 end, u64 flags)
+{
+        if(begin & (GRANULE - 1))
+        {
+                klog_warn("Page is not mappable (phys) as its not page aligned\n");
+        }
+
+        if(virt & (GRANULE - 1))
+        {
+                klog_warn("Page is not mappable (virt) as its not page aligned\n");
+        }
+        u64 *pgd = (u64 *)&__pgd_start;
+
+        u64 *pud = pgd[VADDR_IDX(virt, PGD_INDEX)];
+        if(!pud)
+        {
+                pud = (u64 *)palloc(); 
+                memzero(pud, GRANULE);
+                pgd[VADDR_IDX(virt, PGD_INDEX)] = (u64)pud | MMU_TABLE_FLAGS;
+        }
+
+        u64 *pmd = pud[VADDR_IDX(virt, PUD_INDEX)];
+        if(!pmd)
+        {
+                pmd = (u64 *)palloc(); 
+                memzero(pmd, GRANULE);
+                pud[VADDR_IDX(virt, PUD_INDEX)] = (u64)pmd | MMU_TABLE_FLAGS;
+        }
+
+        u64 *pte = pmd[VADDR_IDX(virt, PMD_INDEX)];
+        if(!pte)
+        {
+                pte = (u64 *)palloc(); 
+                memzero(pte, GRANULE);
+                pmd[VADDR_IDX(virt, PMD_INDEX)] = (u64)pte | MMU_TABLE_FLAGS;
+        }
+
+        u64 curr = begin;
+        while(curr < end)
+        {
+                u64 idx = pte[VADDR_IDX(virt, PTE_INDEX)];
+                pte[idx] = (u64)curr | flags | MMU_DESCR_INT;
+
+                virt += GRANULE;
+                curr += GRANULE;
+
+                if(VADDR_IDX(virt, PTE_INDEX))
+                {
+                        klog_error("Panic as we have overflown!\n");
+                        while(1)
+                                ;
+                }
+        }
+}

@@ -30,5 +30,9 @@
 
 void mmu_dump_entries();
 void *mmu_vtp(const void *p);
+
+
+/* Early mapping functions when we dont have all of our {p,v}mm setup yet */
 void mmu_early_map_page(u64, u64, u64);
+void mmu_early_map_table(u64, u64, u8);
 #endif

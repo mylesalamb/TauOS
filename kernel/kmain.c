@@ -38,7 +38,8 @@ void kinit(void *dtb)
         klog_init(&muart_console);
         mmu_dump_entries();
         pmm_init();
-        vmm_map_mmio(PHYS_REAL, DEVICE_MMIO_BEGIN, DEVICE_MMIO_END);
+        vmm_init();
+        mmu_map_range(PHYS_REAL, DEVICE_MMIO_BEGIN, DEVICE_MMIO_END, MMU_K_DEV_FLAGS);
         mmu_dump_entries();
         while(1)
                 ;
