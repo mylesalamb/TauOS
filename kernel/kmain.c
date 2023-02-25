@@ -5,6 +5,7 @@
 #include <klog.h>
 #include <mb.h>
 #include <dma.h>
+#include <drv/ring.h>
 #include <drv/muart.h>
 #include <drv/fb.h>
 #include <drv/sd.h>
@@ -15,7 +16,7 @@
 #include <mm/mm.h>
 
 //#define PHYS_BASE_ADDR 0xFE000000
-#define PHYS_BASE_ADDR (0x3e800000 | 0xffff000000000000)
+#define PHYS_BASE_ADDR    (0x3e800000 | 0xffff000000000000)
 #define DEVICE_MMIO_BEGIN 0x0FC000000
 #define DEVICE_MMIO_END   0x100000000
 #define PHYS_REAL 0xfffffe0000000000 
@@ -29,12 +30,18 @@ void kinit(void *dtb)
          * a linker-generated array
          */
 
+        klog_init(&ring_console);
+        klog_debug("Test ring console!\n");
+
+
         /* Setup various addresses on the board*/
         aux_init(PHYS_BASE_ADDR);
         gpio_init(PHYS_BASE_ADDR);
         mb_init(PHYS_BASE_ADDR);
         muart_init();
         klog_init(&muart_console);
+        ring_echo(&muart_console);
+        
         mmu_dump_entries();
         mm_init();
         
@@ -65,8 +72,6 @@ __attribute__((aligned(4))) struct mbr_header mbr;
 void kmain()
 {
         printk("Booted to TauOS kernel!\n\n");
-        printk("Dumping page tables to uart!\n");
-
         printk("Initialise EMMC2\n");
         sd_init(PHYS_BASE_ADDR);
         sd_seek(0);

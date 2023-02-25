@@ -7,6 +7,7 @@
 struct console 
 {
         void (*writes)(char *);
+        void (*writec)(char);
 };
 
 #define IO_BLACK        "\033[0;30m"

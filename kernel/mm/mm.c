@@ -14,8 +14,10 @@ struct mm_area{
         u64 end;
 };
 
-#define MM_MAP_GRANULE (1 << 21)
+#define MMIO_BASE 0x0FE000000
+#define MMIO_END  0x100000000
 
+#define MM_MAP_GRANULE (1 << 21)
 struct mm_area _mm_get_board_memory()
 {
         /* We should get this from the device tree but for single board this is fine */
@@ -45,6 +47,11 @@ void mm_init()
         klog_debug("Mapped in board memory, allocate pmm\n");
         pmm_init(phys.end, phys.start, &__END);
         pmarkrange(&__START, &__END);
+}
+
+void mm_map_peripherals()
+{
+
 }
 
 /* With a logical address map, we can easily map from physical to logical addresses*/

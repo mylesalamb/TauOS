@@ -55,7 +55,8 @@ const u32 color_pallete[] = {
 void fb_writes(char *);
 
 struct console fb_console = {
-        .writes = fb_writes
+        .writes = fb_writes,
+        .writec = fb_writec
 };
 
 void fb_init()

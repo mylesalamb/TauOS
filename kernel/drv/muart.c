@@ -19,7 +19,8 @@ void muart_writec(char);
 void muart_writes(char *);
 
 struct console muart_console = {
-        .writes = muart_writes
+        .writes = muart_writes,
+        .writec = muart_writec
 };
 
 void muart_init()

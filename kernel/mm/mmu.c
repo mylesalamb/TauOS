@@ -103,6 +103,13 @@ void _mmu_map_descr(u64 *table, u64 virt_addr, u64 addr_shift, u64 phys_addr, u6
         klog_debug("Mapped %h => %h\n", &table[pg_idx], table[pg_idx]);
 }
 
+/* Allocating version of the early map page funcion */
+void mmu_map_range(u64 virt, u64 start, u64 end, u64 flags)
+{
+        u64 *pgd = (u64 *)&__pgd_start;
+        
+}
+
 /* Dumb non allocating page mapper */
 /* Need this as we need to map the page allocator */
 /* Bitmap before we can allocate anymore page tables */
