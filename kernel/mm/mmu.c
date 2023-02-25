@@ -10,7 +10,6 @@
 extern u32 __pgd_start;
 extern u32 __pud_start;
 extern u32 __pmd_start;
-extern u32 __pte_start;
 
 /* Given a page descriptor get the address from it */
 #define PG_DESCR_ADDR(x) (x & (0x7ffffffff << 12))
@@ -43,7 +42,6 @@ void mmu_dump_entries()
         u64 *pgd_descr = &__pgd_start; 
         u64 *pud_descr = &__pud_start;
         u64 *pmd_descr = &__pmd_start;
-        u64 *pte_descr = &__pte_start;
 
         klog_debug("Dump PGD entries (%h)\n", pgd_descr);
         for(u64 i = 0; i < MMU_D_COUNT; i++)
@@ -67,13 +65,6 @@ void mmu_dump_entries()
                         continue;
                 klog_debug("Entry %d: %h\n", i, pmd_descr[i]);
         }
-        klog_debug("Dump PTE entries (%h)\n", pte_descr);
-        for(u64 i = 0; i < MMU_D_COUNT; i++)
-        {
-                if(!pte_descr[i])
-                        continue;
-                klog_debug("Entry %d: %h\n", i, pte_descr[i]);
-        }
 }
 
 
@@ -84,7 +75,6 @@ void *mmu_vtp(const void *p)
 
         u64 n = (u64)p;
         n &= ~0xffff000000000000;
-        n += 0x80000;
         return (void *)n;
 }
 
@@ -92,7 +82,6 @@ void *mmu_ptv(const void *p)
 {
         /* Absolutely ugly hack, that will need to be removed*/
         u64 n = (u64)p;
-        n -= 0x80000;
         n |= 0xffff000000000000;
         return (void *)n;
 }
@@ -130,77 +119,14 @@ void mmu_early_map_page(u64 virt_addr, u64 phys_addr, u64 flags)
         }
 
         u64 *pgd = (u64 *)&__pgd_start;
-        klog_debug("pgd addr: %h\n", pgd);
+        // klog_debug("pgd addr: %h\n", pgd);
 
         u64 *pud = _mmu_deref_table(pgd, virt_addr, PGD_INDEX);
-        klog_debug("pud addr: %h\n", pud);
+        // klog_debug("pud addr: %h\n", pud);
 
         u64 *pmd = _mmu_deref_table(pud, virt_addr, PUD_INDEX);
-        klog_debug("pmd addr: %h\n", pmd);
+        // klog_debug("pmd addr: %h\n", pmd);
 
-        u64 *pte = _mmu_deref_table(pmd, virt_addr, PMD_INDEX);
-        klog_debug("pte addr: %h\n", pte);
 
-        _mmu_map_descr(pte, virt_addr, PTE_INDEX, phys_addr, flags);
-}
-/* Given a virtual address, map the table (table), at level */
-void mmu_map_table(u64 v, u64 *t, u8 l)
-{
-
-}
-
-/* To map memory we need to be able to alter page */
-void mmu_map_range(u64 virt, u64 begin, u64 end, u64 flags)
-{
-        if(begin & (GRANULE - 1))
-        {
-                klog_warn("Page is not mappable (phys) as its not page aligned\n");
-        }
-
-        if(virt & (GRANULE - 1))
-        {
-                klog_warn("Page is not mappable (virt) as its not page aligned\n");
-        }
-        u64 *pgd = (u64 *)&__pgd_start;
-
-        u64 *pud = pgd[VADDR_IDX(virt, PGD_INDEX)];
-        if(!pud)
-        {
-                pud = (u64 *)palloc(); 
-                memzero(pud, GRANULE);
-                pgd[VADDR_IDX(virt, PGD_INDEX)] = (u64)pud | MMU_TABLE_FLAGS;
-        }
-
-        u64 *pmd = pud[VADDR_IDX(virt, PUD_INDEX)];
-        if(!pmd)
-        {
-                pmd = (u64 *)palloc(); 
-                memzero(pmd, GRANULE);
-                pud[VADDR_IDX(virt, PUD_INDEX)] = (u64)pmd | MMU_TABLE_FLAGS;
-        }
-
-        u64 *pte = pmd[VADDR_IDX(virt, PMD_INDEX)];
-        if(!pte)
-        {
-                pte = (u64 *)palloc(); 
-                memzero(pte, GRANULE);
-                pmd[VADDR_IDX(virt, PMD_INDEX)] = (u64)pte | MMU_TABLE_FLAGS;
-        }
-
-        u64 curr = begin;
-        while(curr < end)
-        {
-                u64 idx = pte[VADDR_IDX(virt, PTE_INDEX)];
-                pte[idx] = (u64)curr | flags | MMU_DESCR_INT;
-
-                virt += GRANULE;
-                curr += GRANULE;
-
-                if(VADDR_IDX(virt, PTE_INDEX))
-                {
-                        klog_error("Panic as we have overflown!\n");
-                        while(1)
-                                ;
-                }
-        }
+        _mmu_map_descr(pmd, virt_addr, PMD_INDEX, phys_addr, flags);
 }

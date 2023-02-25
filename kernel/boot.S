@@ -228,29 +228,38 @@ __mmu_bootstrap_tables:
         ldr x4, =MMU_TABLE_FLAGS
         bl __mmu_alloc_int_entry
         
-        /* prepare pmd*/
-        adrp x0, __pmd_start
-        ldr x1, =__TEXT_START 
-        mov x2, #21
-        adrp x3, __pte_start
-        ldr x4, =MMU_TABLE_FLAGS
-        bl __mmu_alloc_int_entry
+
+        /* Calculate odd address offsets */
+        /* Give us a mask for a 2Mb section*/
+        mov x7, #1
+        lsr x7, x7, #21
+        sub x7, x7, #1
+
+        /* Get the offset in a 2Mb page */
+        adrp x1, __TEXT_START
+        mov x8, x1
         
-        /* 4kb descriptors are weird and need an extra bit? */
-        adrp x0, __pte_start
-        mov x1, #0x80000
+        /* Get the offset in a 2Mb page */
+        and x8, x8, x7
+
+        /* align the addr to a page boundary */
+        sub x1, x1, x8
+
+        adrp x0, __pmd_start
+        mov x1, #0x0
         ldr x2, =__TEXT_START
+        sub x2, x2, x8
         ldr x3, =__END
-        ldr x4, =(MMU_K_BLK_FLAGS | MMU_DESCR_INT)
-        ldr x5, =(1024 * 4 )
-        ldr x6, =12
+        ldr x4, =(MMU_K_BLK_FLAGS)
+        ldr x5, =(1024 * 1024 * 2 )
+        ldr x6, =21
         bl __mmu_alloc_term_entry
 
         /* Remap the peripheral base address */
         adrp x0, __pmd_start
         mov x1, #0xfe000000
-        ldr x2, =0x400000
-        ldr x3, =0x1600000
+        ldr x2, =0x3e800000
+        ldr x3, =0x3f200000
         ldr x4, =MMU_K_DEV_FLAGS
         ldr x5, =(1024 * 1024 * 2)
         ldr x6, =21

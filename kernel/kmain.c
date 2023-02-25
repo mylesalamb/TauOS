@@ -12,11 +12,10 @@
 #include <lib/io.h>
 #include <gic.h>
 #include <timer.h>
-#include <mm/mmu.h>
-#include <mm/pmm.h>
+#include <mm/mm.h>
 
 //#define PHYS_BASE_ADDR 0xFE000000
-#define PHYS_BASE_ADDR (0x400000 | 0xffff000000000000)
+#define PHYS_BASE_ADDR (0x3e800000 | 0xffff000000000000)
 #define DEVICE_MMIO_BEGIN 0x0FC000000
 #define DEVICE_MMIO_END   0x100000000
 #define PHYS_REAL 0xfffffe0000000000 
@@ -37,12 +36,8 @@ void kinit(void *dtb)
         muart_init();
         klog_init(&muart_console);
         mmu_dump_entries();
-        pmm_init();
-        vmm_init();
-        mmu_map_range(PHYS_REAL, DEVICE_MMIO_BEGIN, DEVICE_MMIO_END, MMU_K_DEV_FLAGS);
-        mmu_dump_entries();
-        while(1)
-                ;
+        mm_init();
+        
         dma_init(PHYS_BASE_ADDR);
         timer_init(PHYS_BASE_ADDR);
 
@@ -50,7 +45,7 @@ void kinit(void *dtb)
         io_init(&muart_console);
         muart_init();
         klog_init(&muart_console);
-        mmu_dump_entries();
+
         fb_init();
         
         io_init(&fb_console);

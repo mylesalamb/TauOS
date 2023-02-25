@@ -8,51 +8,14 @@ extern u32 __vmm_pud;
 extern u32 __vmm_pmd;
 extern u32 __vmm_pte;
 
-
-#define VMM_AREA 0xffff000002000000
-
-
-/* General purpose page allocator / mapping functions */
+/* Page level allocator, and concatenator, like vmalloc on linux.... if i implement it :P */
 void vmm_init()
 {
-        klog_debug("Bootstrap vmm area\n");
-        klog_debug("__vmm_pud => %h\n", &__vmm_pud);
-        klog_debug("__vmm_pmd => %h\n", &__vmm_pmd);
-        klog_debug("__vmm_pte => %h\n", &__vmm_pte);
-
-        klog_debug("Zeroing vmm area...\n");
-        memzero(&__vmm_pud, 4096);
-        memzero(&__vmm_pmd, 4096);
-        memzero(&__vmm_pte, 4096);
-        klog_debug("Done zeroing...\n");
-        
-        klog_debug("Mapping VMM area into page structures\n")
-
-
-}
-
-void vmm_map_mmio(u64 r, u64 b, u64 e)
-{
-        klog_debug("Asking for a page!\n");
-        
-        for(int i = 0; i < 10; i++)
-        {
-                void *p = palloc();
-                klog_debug("Got page %h\n", p);
-        }
-
-
-
+    klog_debug("VMM init called, but there is nothing to do :)\n");
 }
 
 
-void *vmm_upalloc()
+void * valloc(u64 p)
 {
-
-}
-
-void *vmm_kpalloc()
-{
-
-
+    
 }

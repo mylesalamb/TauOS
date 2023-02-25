@@ -34,5 +34,8 @@
 #define TCR_TG1_4K			(2 << 30)
 #define TCR_VALUE			(TCR_T0SZ | TCR_T1SZ | TCR_TG0_4K | TCR_TG1_4K)
 
+#define MM_LOGICAL_START 0xffff000000000000
+void mm_init();
+
 
 #endif
