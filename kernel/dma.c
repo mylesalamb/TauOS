@@ -1,6 +1,7 @@
 #include <types.h>
 #include <dma.h>
 #include <klog.h>
+#include <mm/mm.h>
 #include <lib/bitmap.h>
 #include <lib/mem.h>
 
@@ -91,8 +92,8 @@ void dma_cb_init_memcpy(u8 channel, void *cb, void *src, void *dst, size_t n)
                 klog_debug("Setup DMA (norm) memcpy\n");
                 memzero(cb, sizeof(struct dma_lite_cb));
                 struct dma_lite_cb *lite_cb = cb;
-                lite_cb->source_ad = PHYS_TO_BUS((u32)src);
-                lite_cb->dest_ad = PHYS_TO_BUS((u32)dst);
+                lite_cb->source_ad = (u32)PHYS_TO_BUS(mm_ltp(src));
+                lite_cb->dest_ad = (u32)PHYS_TO_BUS(mm_ltp(dst));
                 lite_cb->ti = TI_DESTINC | TI_SRCINC | TI_SRCWIDTH | TI_DESTWIDTH;
                 lite_cb->transfer_length = n;
 

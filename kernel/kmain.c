@@ -14,6 +14,9 @@
 #include <gic.h>
 #include <timer.h>
 #include <mm/mm.h>
+#include <mm/mmu.h>
+#include <mm/alloc.h>
+#include <dtb.h>
 
 //#define PHYS_BASE_ADDR 0xFE000000
 #define PHYS_BASE_ADDR    (0xFE000000 | 0xffff000000000000)
@@ -29,9 +32,9 @@ void kinit(void *dtb)
          * a linker-generated array
          */
 
-        klog_init(&ring_console);
-        klog_debug("Test ring console!\n");
         
+
+        klog_init(&ring_console);
         mm_init();
         mm_map_peripherals();
 
@@ -42,7 +45,7 @@ void kinit(void *dtb)
         klog_init(&muart_console);
         ring_echo(&muart_console);
 
-        mmu_dump_entries();
+       
 
         dma_init(PHYS_BASE_ADDR);
         timer_init(PHYS_BASE_ADDR);
@@ -61,12 +64,17 @@ void kinit(void *dtb)
         irq_enable();
 
         printk(IO_GREEN "Kernel initialisation tasks done!\n" IO_RESET);
+        printk(IO_GREEN "=================================\n\n" IO_RESET);
         printk("Firmware revision: %h\n", mb_get_firmware_revision());
-        printk("Board revision: %h\n\n", mb_get_board_revision());
+        printk("Board revision: %h\n", mb_get_board_revision());
+        printk("Device tree address: %h\n\n", dtb);
+        dtb_init((struct dtb_header *)mm_ptl(dtb));
         kmain();
 }
 
 __attribute__((aligned(4))) struct mbr_header mbr;
+struct kmem_cache mcache;
+
 
 void kmain()
 {
@@ -74,8 +82,17 @@ void kmain()
         printk("Initialise EMMC2\n");
         sd_init(PHYS_BASE_ADDR);
         sd_seek(0);
-        sd_read(&mbr, 512);
+        sd_read((u8 *)&mbr, 512);
         printk("\n\n");
         mbr_dump(&mbr);
+
+        printk("Test SLAB Allocator!\n");
+        kmemcache_init(&mcache, 128);
+        void * ret = ckmalloc(&mcache);
+        printk("Returned ptr %h\n", ret);
+        ret = ckmalloc(&mcache);
+        printk("Returned ptr %h\n", ret);
+
+
 
 }

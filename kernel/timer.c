@@ -24,7 +24,7 @@ void timer_irq_handler();
 
 void timer_init(u64 base_addr)
 {
-        u32 timer_low;
+        // u32 timer_low;
         timer_dev = (struct timer_regs*)(base_addr + TIMER_REGS_OFFSET);
         
         /* Disable interrupt stuff at the moment*/

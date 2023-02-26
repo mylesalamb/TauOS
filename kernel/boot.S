@@ -53,6 +53,7 @@ TauOS boot entrypoint
 .globl _start
 _start:
         // Set spsr
+        mov x28, x0
         ldr x5, =SPSR_EL2_VAL
         msr SPSR_EL2, x5
         // Set HCR
@@ -113,6 +114,8 @@ bss_loop_end:
         orr x1, x1, x2
         msr sctlr_el1, x1
 
+        /* restore pointer to device tree */
+        mov x0, x28
         blr x3
 
 // Secondary core, and main [if it returns] should halt 
@@ -254,6 +257,6 @@ __mmu_bootstrap_tables:
         ldr x5, =(1024 * 1024 * 2 )
         ldr x6, =21
         bl __mmu_alloc_term_entry
-        
+
         mov x30, x29
         ret

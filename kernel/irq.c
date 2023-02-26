@@ -23,6 +23,18 @@ void irq_install_handler(u32 irq_number, void (*handle)())
 void se_rcver(struct irq_ctx *ctx)
 {
         printk("Synchronous Exception occured!\n");
+        for(int i = 0; i < ARRAY_SZ(ctx->registers); i++)
+        {
+                if(i % 2 == 0)
+                        printk("\n");
+                printk("x%u: %h    ", i, ctx->registers[i]);
+        }
+        printk("\nesr: %h  far: %h\n", ctx->esr, ctx->far);
+        printk("spsr: %h  elr: %h\n\n", ctx->spsr, ctx->elr);
+
+        printk("Not recoverable, hang CPU\n");
+        while(1)
+                ;
 }
 void irq_rcver(struct irq_ctx *ctx)
 {
@@ -36,6 +48,18 @@ void fiq_rcver(struct irq_ctx *ctx)
 void ser_rcver(struct irq_ctx *ctx)
 {
         printk("System Error occured!\n");
+        for(int i = 0; i < ARRAY_SZ(ctx->registers); i++)
+        {
+                if(i % 2 == 0)
+                        printk("\n");
+                printk("x%u: %h    ", i, ctx->registers[i]);
+        }
+        printk("\nesr: %h  far: %h\n", ctx->esr, ctx->far);
+        printk("spsr: %h  elr: %h\n\n", ctx->spsr, ctx->elr);
+
+        printk("Not recoverable, hang CPU\n");
+        while(1)
+                ;
 
 }
 void ud_rcver(struct irq_ctx *ctx)

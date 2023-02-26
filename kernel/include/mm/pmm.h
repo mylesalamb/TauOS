@@ -1,6 +1,8 @@
 #ifndef PMM_H
 #define PMM_H 1
 
+#define PMM_PAGE_SIZE 4096
+
 void pmm_init(u64, u64, void *);
 
 /* Return physical address of a free page */

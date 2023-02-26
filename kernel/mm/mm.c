@@ -40,7 +40,6 @@ void mm_init()
         klog_debug("discovered, board memory as %h - %h\n", phys.start, phys.end);
         for(u64 p = phys.start; p < phys.end; p += MM_MAP_GRANULE)
         {
-                klog_debug("Mapping memory for %h\n", p);
                 mmu_early_map_page(MM_LOGICAL_START | p, p, MMU_K_BLK_FLAGS);
         }
 

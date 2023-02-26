@@ -17,5 +17,5 @@ void vmm_init()
 
 void * valloc(u64 p)
 {
-    
+    return (void *)0;
 }

@@ -7,10 +7,9 @@
 
 #define MMU_D_COUNT 512
 
-/* Linker symbols are literally trash */
-extern u32 __pgd_start;
-extern u32 __pud_start;
-extern u32 __pmd_start;
+extern u64 __pgd_start;
+extern u64 __pud_start;
+extern u64 __pmd_start;
 
 /* Given a page descriptor get the address from it */
 #define PG_DESCR_ADDR(x) (x & (0x7ffffffff << 12))
@@ -73,7 +72,6 @@ void *mmu_vtp(const void *p)
 {
         /* At the moment this only works for code that we have mapped in */
         /* There are real arm instructions that help with this*/
-
         u64 n = (u64)p;
         n &= ~0xffff000000000000;
         return (void *)n;
@@ -104,7 +102,6 @@ void _mmu_map_descr(u64 *table, u64 virt_addr, u64 addr_shift, u64 phys_addr, u6
         u16 pg_idx = (virt_addr >> addr_shift) & PG_IDX_MASK;
         u64 descr = phys_addr | flags;
         table[pg_idx] = descr;
-        klog_debug("Mapped %h => %h\n", &table[pg_idx], table[pg_idx]);
 }
 
 void mmu_map_entry(u64 virt, u64 phys, u64 level, u64 flags)
@@ -171,14 +168,8 @@ void mmu_early_map_page(u64 virt_addr, u64 phys_addr, u64 flags)
         }
 
         u64 *pgd = (u64 *)&__pgd_start;
-        // klog_debug("pgd addr: %h\n", pgd);
-
         u64 *pud = _mmu_deref_table(pgd, virt_addr, PGD_INDEX);
-        // klog_debug("pud addr: %h\n", pud);
-
         u64 *pmd = _mmu_deref_table(pud, virt_addr, PUD_INDEX);
-        // klog_debug("pmd addr: %h\n", pmd);
-
 
         _mmu_map_descr(pmd, virt_addr, PMD_INDEX, phys_addr, flags);
 }

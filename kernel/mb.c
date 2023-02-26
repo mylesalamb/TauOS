@@ -4,7 +4,7 @@
 #include <mb.h>
 #include <lib/io.h>
 #include <lib/mem.h>
-#include <mm/mmu.h>
+#include <mm/mm.h>
 
 #define PHY_OFFSET_MB_REGS 0xB880
 
@@ -26,7 +26,7 @@ struct mbox_regs *mb_get()
 
 void mb_send(struct mbox_hdr *buffer, u8 channel)
 {
-        u32 msg = ((u64)mmu_vtp(buffer)) & 0xffffffff;
+        u32 msg = ((u64)mm_ltp(buffer)) & 0xffffffff;
         struct mbox_regs *mb = mb_get();
         while(mb->status & MBOX_WFULL)
                 ;
@@ -45,7 +45,7 @@ struct mbox_hdr *mb_recv(u8 channel)
                 if((msg & 0xf) == channel)
                         break;
         }
-        return (struct mbox_hdr *)(u64)(mmu_ptv(msg & 0xfffffff0)) ;
+        return (struct mbox_hdr *)mm_ptl((void *)((u64)msg & 0xfffffff0)) ;
 }
 
 struct mbox_hdr *mb_fmt_hdr(ureg32 *buff, u32 code)

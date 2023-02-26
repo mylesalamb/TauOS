@@ -32,4 +32,6 @@ struct dtb_mem_reserve {
         ureg64 address;
         ureg64 size;
 };
+
+void dtb_init(struct dtb_header *header);
 #endif

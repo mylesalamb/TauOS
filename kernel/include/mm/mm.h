@@ -36,6 +36,9 @@
 
 #define MM_LOGICAL_START 0xffff000000000000
 void mm_init();
+void mm_map_peripherals();
 
+void *mm_ltp(void *p);
+void *mm_ptl(void *p);
 
 #endif
