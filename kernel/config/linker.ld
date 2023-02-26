@@ -72,7 +72,7 @@ SECTIONS
         . += 4096;
         __vmm_pte_end = .;
         __write_buffer_start = .;
-        . += 4096;
+        . += 4096 * 3;
         __write_buffer_end = .;
         __END = .;
 

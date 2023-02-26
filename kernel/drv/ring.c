@@ -5,7 +5,7 @@
 void ring_writes(char *);
 void ring_writec(char);
 
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE (4096 * 3)
 
 extern char __write_buffer_start;
 static u64 offset = 0;
@@ -27,7 +27,7 @@ void ring_writes(char *s)
 void ring_writec(char c)
 {
     *(&__write_buffer_start + offset) = c;
-    if(++offset == 4096){
+    if(++offset == BUFFER_SIZE){
         offset = 0;
         overflow = 1;
     }

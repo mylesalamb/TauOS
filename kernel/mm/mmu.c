@@ -1,4 +1,5 @@
 #include <types.h>
+#include <mm/mm.h>
 #include <mm/mmu.h>
 #include <mm/pmm.h>
 #include <lib/mem.h>
@@ -15,7 +16,7 @@ extern u32 __pmd_start;
 #define PG_DESCR_ADDR(x) (x & (0x7ffffffff << 12))
 
 #define GRANULE 4096
-#define ENTIRES 512
+#define ENTRIES 512
 
 #define PGD_LEVEL 3
 #define PUD_LEVEL 2
@@ -91,8 +92,11 @@ u64 *_mmu_deref_table(u64 *table, u64 virt_addr, u64 addr_shift)
 {
         u16 pg_idx = (virt_addr >> addr_shift) & PG_IDX_MASK;
         u64 entry = table[pg_idx];
-        return mmu_ptv((u64 *)PG_DESCR_ADDR(entry));
+        
+        if(!entry)
+                return (u64)0;
 
+        return mmu_ptv((u64 *)PG_DESCR_ADDR(entry));
 }
 
 void _mmu_map_descr(u64 *table, u64 virt_addr, u64 addr_shift, u64 phys_addr, u64 flags)
@@ -103,12 +107,53 @@ void _mmu_map_descr(u64 *table, u64 virt_addr, u64 addr_shift, u64 phys_addr, u6
         klog_debug("Mapped %h => %h\n", &table[pg_idx], table[pg_idx]);
 }
 
+void mmu_map_entry(u64 virt, u64 phys, u64 level, u64 flags)
+{
+        u64 *pgd = (u64 *)&__pgd_start;
+        u64 *pud = _mmu_deref_table(pgd, virt, PGD_INDEX);
+        if(!pud)
+        {
+                klog_debug("PUD not mapped, allocating it!\n");
+                pud = palloc();
+                memset(pud, 0, 4096);
+                _mmu_map_descr(pgd, virt, PGD_INDEX, mm_ltp(pud), MMU_TABLE_FLAGS);
+        }
+        if(level == PUD_LEVEL)
+        {
+                klog_error("Not supported, break\n");
+                while(1)
+                        ;
+        }
+
+        u64 *pmd = _mmu_deref_table(pud, virt, PUD_INDEX);
+        if(!pmd)
+        {
+                klog_debug("PMD not mapped, allocating it!\n");
+                pmd = palloc();
+                memset(pmd, 0, 4096);
+                _mmu_map_descr(pud, virt, PUD_INDEX, mm_ltp(pmd), MMU_TABLE_FLAGS);
+        }
+        if(level == PMD_LEVEL)
+        {
+                _mmu_map_descr(pmd, virt, PMD_INDEX, phys, flags);
+        }
+
+}
+
 /* Allocating version of the early map page funcion */
 void mmu_map_range(u64 virt, u64 start, u64 end, u64 flags)
 {
-        u64 *pgd = (u64 *)&__pgd_start;
-        
+        for(;;)
+        {
+                if(start >= end)
+                        break;
+                mmu_map_entry(virt, start, PMD_LEVEL, MMU_K_DEV_FLAGS);
+                virt += (2 * 1024 * 1024);
+                start += (2 * 1024 * 1024);
+        }
 }
+
+
 
 /* Dumb non allocating page mapper */
 /* Need this as we need to map the page allocator */

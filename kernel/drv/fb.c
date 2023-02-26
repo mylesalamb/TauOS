@@ -2,6 +2,7 @@
 #include <klog.h>
 #include <drv/font.h>
 #include <drv/fb.h>
+#include <mm/mm.h>
 #include <lib/common.h>
 #include <lib/io.h>
 #include <lib/mem.h>
@@ -110,7 +111,7 @@ void fb_init()
 
                 ureg8 *fb_bus_addr = (ureg8 *)(u64)(values[0]);
                 u32 fb_size = values[1];
-                state.fb_addr = (ureg8 *)BUS_TO_PHYS((u64)fb_bus_addr);
+                state.fb_addr = (ureg8 *)mm_ptl(BUS_TO_PHYS((u64)fb_bus_addr));
                 state.fb_size = fb_size;
 
                 klog_debug("Framebuffer address is BUS_ADDR(%h) => PHYS_ADDR(%h)\n", fb_bus_addr, BUS_TO_PHYS((u64)fb_bus_addr));

@@ -21,11 +21,11 @@ struct mm_area{
 struct mm_area _mm_get_board_memory()
 {
         /* We should get this from the device tree but for single board this is fine */
-        u32 arm_mem = mb_get_arm_mem(); 
+        u32 arm_mem = 0x20000000 * 2; //mb_get_arm_mem(); 
         klog_debug("Arm mem is? %h\n", arm_mem);
         struct mm_area phys = {
                 .start = 0x0,
-                .end = arm_mem / 2
+                .end = arm_mem
         };
         return phys;
 }
@@ -49,8 +49,12 @@ void mm_init()
         pmarkrange(&__START, &__END);
 }
 
+/* We use the logical address space to map in devices */
+/* Ideally this should be derived from the device tree */
 void mm_map_peripherals()
 {
+        klog_info("Mapping peripherals\n");
+        mmu_map_range(MM_LOGICAL_START | MMIO_BASE, MMIO_BASE, MMIO_END, MMU_K_DEV_FLAGS);
 
 }
 

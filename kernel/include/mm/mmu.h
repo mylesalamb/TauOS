@@ -31,6 +31,7 @@
 void mmu_dump_entries();
 void *mmu_vtp(const void *p);
 
+void mmu_map_range(u64, u64, u64, u64);
 
 /* Early mapping functions when we dont have all of our {p,v}mm setup yet */
 void mmu_early_map_page(u64, u64, u64);

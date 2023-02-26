@@ -254,16 +254,6 @@ __mmu_bootstrap_tables:
         ldr x5, =(1024 * 1024 * 2 )
         ldr x6, =21
         bl __mmu_alloc_term_entry
-
-        /* Remap the peripheral base address */
-        adrp x0, __pmd_start
-        mov x1, #0xfe000000
-        ldr x2, =0x3e800000
-        ldr x3, =0x3f200000
-        ldr x4, =MMU_K_DEV_FLAGS
-        ldr x5, =(1024 * 1024 * 2)
-        ldr x6, =21
-
-        bl __mmu_alloc_term_entry
+        
         mov x30, x29
         ret
