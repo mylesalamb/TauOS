@@ -9,7 +9,7 @@
 #include <drv/muart.h>
 #include <drv/fb.h>
 #include <drv/sd.h>
-#include <drv/fs/mbr.h>
+#include <fs/mbr.h>
 #include <lib/io.h>
 #include <gic.h>
 #include <timer.h>
@@ -18,7 +18,6 @@
 #include <mm/alloc.h>
 #include <dtb.h>
 
-//#define PHYS_BASE_ADDR 0xFE000000
 #define PHYS_BASE_ADDR    (0xFE000000 | 0xffff000000000000)
 #define DEVICE_MMIO_BEGIN 0x0FC000000
 #define DEVICE_MMIO_END   0x100000000
@@ -31,9 +30,6 @@ void kinit(void *dtb)
          * Ideally these would be called from
          * a linker-generated array
          */
-
-        
-
         klog_init(&ring_console);
         mm_init();
         mm_map_peripherals();
@@ -44,7 +40,6 @@ void kinit(void *dtb)
         muart_init();
         klog_init(&muart_console);
         ring_echo(&muart_console);
-
        
 
         dma_init(PHYS_BASE_ADDR);
@@ -63,6 +58,7 @@ void kinit(void *dtb)
         gic_irq_enable(0);
         irq_enable();
 
+        kmalloc_init();
         printk(IO_GREEN "Kernel initialisation tasks done!\n" IO_RESET);
         printk(IO_GREEN "=================================\n\n" IO_RESET);
         printk("Firmware revision: %h\n", mb_get_firmware_revision());
@@ -73,7 +69,6 @@ void kinit(void *dtb)
 }
 
 __attribute__((aligned(4))) struct mbr_header mbr;
-struct kmem_cache mcache;
 
 
 void kmain()
@@ -81,18 +76,5 @@ void kmain()
         printk("Booted to TauOS kernel!\n\n");
         printk("Initialise EMMC2\n");
         sd_init(PHYS_BASE_ADDR);
-        sd_seek(0);
-        sd_read((u8 *)&mbr, 512);
-        printk("\n\n");
-        mbr_dump(&mbr);
-
-        printk("Test SLAB Allocator!\n");
-        kmemcache_init(&mcache, 128);
-        void * ret = ckmalloc(&mcache);
-        printk("Returned ptr %h\n", ret);
-        ret = ckmalloc(&mcache);
-        printk("Returned ptr %h\n", ret);
-
-
-
+        mbr_init(&sd_device);
 }

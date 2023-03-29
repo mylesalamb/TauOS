@@ -31,7 +31,12 @@ SECTIONS
         {
                 *(.bss)
         }
-
+        __LGA_START = .;
+        .lga : ALIGN(4096)
+        {
+                KEEP(*(SORT(.lga_*)))
+        }
+        __LGA_END = .;
         /* Initial page tables for the higher half */
         . = ALIGN(128);
         . += 4096;

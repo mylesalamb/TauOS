@@ -76,9 +76,7 @@ this operating system wont need much to run at all.
 
 ```
 - 0x0000000000000000 - 0x0000ffffffffffff Userspace (256Tb)
-- 0xffff000000000000 - 0xffff000001000000 Kernel code and data, including page manager (16Mb)
-- 0xffff000002000000 -                    Kernel virt manager, memory manager for early allocation and managment of raw pages
-- 0xfffffe0000000000 - 0xffffffffffffffff Remapped peripherals
+- 0xffff000000000000 - 0xffff0000C0000000 Kernel logical map (1Gb)
 ...
 ```
 

@@ -49,7 +49,11 @@ main() {
                         echo -e "\tget\tGets a requested resource"
                         echo -e "\tdist\tDistributes a requested resource"
                         echo -e "\trun\tRuns a requested resource"
-                        
+                        ;;
+                *)
+                        echo "Command not recognised! ($cmd)"
+                        exit 1
+                        ;;
         esac
 }
 

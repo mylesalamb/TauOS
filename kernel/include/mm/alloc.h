@@ -9,7 +9,7 @@ struct kmem_slab_descr {
 
 struct kmem_page_descr {
         struct kmem_page_descr *next;
-        struct kmem_slab_descr slab;
+        struct kmem_slab_descr *slab;
 };
 
 struct kmem_cache {

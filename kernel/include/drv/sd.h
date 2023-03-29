@@ -4,6 +4,8 @@
 
 #define SD_REGS_OFFSET 0x340000
 
+extern struct blk_dev sd_device;
+
 struct sd_regs {
         ureg32 arg2;                           
         ureg16 block_size;

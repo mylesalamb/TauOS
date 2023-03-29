@@ -2,6 +2,7 @@
 #include <mb.h>
 #include <drv/sd.h>
 #include <lib/common.h>
+#include <drv/blk.h>
 #include <klog.h>
 #include <timer.h>
 
@@ -379,10 +380,17 @@ void sd_reset_card()
         //timer_sleep_ms(1000);
 }
 
+void sd_write(u8 *buffer, u64 size)
+{
+        (void)buffer;
+        (void)size;
+        return;
+}
+
 void sd_read(u8 *buffer, u64 size)
 {
         u32 cmd;
-        u32 lba = sd_dev_state.offset / 512;
+        u32 lba = sd_dev_state.offset;
         u32 block_count = (size / 512) + ((size % 512) ? 1 : 0);
 
         //klog_debug("Ensure card is in data state\n");
@@ -457,3 +465,10 @@ void sd_dump_regs()
         DUMP_OFFSET(struct sd_regs, spi_int_support);
         DUMP_OFFSET(struct sd_regs, slot_int_status);
 }
+
+
+struct blk_dev sd_device = {
+        .seek = sd_seek,
+        .read = sd_read,
+        .write = sd_write,
+};
