@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <getopt.h>
@@ -20,6 +21,7 @@ static struct option opts[] = {
 int ini_parse(char *, void (*)(char *, char *, char *));
 void ini_action(char *, char *, char *);
 
+char *lskipws(char *);
 
 int main(int argc, char *argv[])
 {
@@ -66,6 +68,7 @@ int main(int argc, char *argv[])
 
 #define INI_SBEGIN '['
 #define INI_SEND ']'
+#define INI_COMMENT ';'
 
 int ini_parse(char *filename, void (*cb)(char *, char *, char *))
 {
@@ -81,21 +84,39 @@ int ini_parse(char *filename, void (*cb)(char *, char *, char *))
 
         while(fgets(line_buffer, BUFF_MAX, handle))
         {
+                char *csr = line_buffer;
+                csr = lskipws(csr);
+
+                /* Is it a comment*/
+                if(*csr == INI_COMMENT)
+                        continue;
+
                 /* If this is the beginning of a config section */
-                if(line_buffer[0] == INI_SBEGIN)
+                if(*csr == INI_SBEGIN)
                 {
-                        size_t i = 0;
+                        char *scsr = section;
+                        csr++;
+
+                        while(*csr != INI_SEND)
+                        {
+                                *scsr = *csr;
+                                scsr++;
+                                csr++;
+                        }
+                        scsr++;
+                        *scsr = '\0';
+
+
                         continue;
                 }
 
                 if(!section[0])
                 {
-                        fprintf(stderr, "Variable definition outwith section!");
+                        fprintf(stderr, "Variable definition outwith section!\n");
                         fclose(handle);
                         return 1;
                 }
 
-                char *csr = line_buffer;
                 char *var = line_buffer;
                 char *val;
 
@@ -118,13 +139,26 @@ int ini_parse(char *filename, void (*cb)(char *, char *, char *))
 void ini_action(char *section_name, char *variable_name, char *variable_value)
 {
         char output_buffer[BUFF_MAX];
-        sprintf(output_buffer, "%s_%s=%s", section_name, variable_name, variable_value);
+        sprintf(output_buffer, "%s_%s=", section_name, variable_name);
         for(size_t i = 0; output_buffer[i]; i++)
         {
                 output_buffer[i] = toupper(output_buffer[i]);
         }
+        strcat(output_buffer, variable_value);
 
         printf("%s", output_buffer);
 
 }
 
+/* Given a string skip all the prefixed whitespace */
+char *lskipws(char * str)
+{
+        char *csr = str;
+        if(!str)
+                return NULL;
+
+        while(*str && isspace(*csr))
+                csr++;
+
+        return csr;
+}
