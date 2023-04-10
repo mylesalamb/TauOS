@@ -62,122 +62,141 @@ _tau_build () {
         shift
 
         case $cmd in
-        "os")
-                make ${1:-$_DEFAULT_OS_TARGET} -{r,R,s}
-                generate_symbol_table
-                ;;
-        "sd")
-        {
-                echo "o"; # Create a new dos/mbr partition table
-                echo "n"; # Create a new partion
-                echo "p"; # Primary
-                echo "1"; #
-                echo "";
-                echo "+128M"
-                
-                echo "n";
-                echo "p";
-                echo "2";
-                echo "";
-                echo "";
-                
-                echo "t";
-                echo "1";
-                echo "0c";
-                
-                echo "t";
-                echo "2";
-                echo "83";
+                "os")
+                        make ${1:-$_DEFAULT_OS_TARGET} -{r,R,s}
+                        generate_symbol_table
+                        ;;
+                "sd")
+                        {
+                                echo "o"; # Create a new dos/mbr partition table
+                                echo "n"; # Create a new partion
+                                echo "p"; # Primary
+                                echo "1"; #
+                                echo "";
+                                echo "+128M"
 
-                echo "w";
+                                echo "n";
+                                echo "p";
+                                echo "2";
+                                echo "";
+                                echo "";
 
+                                echo "t";
+                                echo "1";
+                                echo "0c";
 
-        } | fdisk $_DEFAULT_DEV_TARGET
-        mkfs.fat -F 32 "${_DEFAULT_DEV_TARGET}p1" 
-        mkfs -t ext2 "${_DEFAULT_DEV_TARGET}p2" 
-                ;;
-                        esac
+                                echo "t";
+                                echo "2";
+                                echo "83";
+
+                                echo "w";
 
 
-}
-
-_tau_get () {
-        local cmd=$1
-        shift
-
-        case $cmd in
-        "firmware")
-                mkdir $FIRMWARE_CACHE
-                for file in $FIRMWARE_FILES; do
-                        [ ! -f "$FIRMWARE_CACHE/$file" ] && wget "$FIRMWARE_REPO/$file" -P "$FIRMWARE_CACHE" 
-                done
-                ;;
-        "toolchain")
-                wget "${COMPILER_SRC}"
-                tar -xvf $CC_DIR.tar.xz
-                ;;
-
-        esac
+                        } | fdisk $_DEFAULT_DEV_TARGET
+                        mkfs.fat -F 32 "${_DEFAULT_DEV_TARGET}p1" 
+                        mkfs -t ext2 "${_DEFAULT_DEV_TARGET}p2" 
+                        ;;
+                *)
+                        echo "Subcommand not recognised ($cmd)"
+                        exit 1
+                        ;;
 
 
-}
 
-_tau_dist () {
-        local cmd=$1
-        shift
-        
-        mnt=${1:-$_DEFAULT_SD_TARGET}
+                esac
 
 
-        case $cmd in
-        "os")
-                echo "Copying kernel to remote"
-                mount /dev/$mnt /tmp/mnt
-                cp obj/kernel/kernel8.img /tmp/mnt
-                cp obj/armstub/armstub.bin /tmp/mnt
-                cp bios/config.txt /tmp/mnt
-                sync
-                umount /tmp/mnt
-                ;;
-        "bootloader")
-                echo "Copying bootloader to remote"
-                mount /dev/$mnt /tmp/mnt
-                cp obj/bootloader/client/kernel8.img /tmp/mnt
-                cp obj/armstub/armstub.bin /tmp/mnt
-                cp bios/config.txt /tmp/mnt
-                sync
-                umount /tmp/mnt
-                ;;
+        }
 
-        "firmware")
-                mount /dev/$mnt /tmp/mnt
-                for file in $FIRMWARE_CACHE/*; do
-                        echo "Copying $file to remote"
-                        cp $file /tmp/mnt
-                done
-                umount /tmp/mnt
-                ;;
-        "--help")
-                echo ""
-        esac
+        _tau_get () {
+                local cmd=$1
+                shift
+
+                case $cmd in
+                        "firmware")
+                                mkdir $FIRMWARE_CACHE
+                                for file in $FIRMWARE_FILES; do
+                                        [ ! -f "$FIRMWARE_CACHE/$file" ] && wget "$FIRMWARE_REPO/$file" -P "$FIRMWARE_CACHE" 
+                                done
+                                ;;
+                        "toolchain")
+                                wget "${COMPILER_SRC}"
+                                tar -xvf $CC_DIR.tar.xz
+                                ;;
+                        *)
+                                echo "Subcommand not recognised ($cmd)"
+                                exit 1
+                                ;;
+                esac
 
 
-}
+        }
 
-_tau_run () {
-        local cmd=$1
-        shift
+        _tau_dist () {
+                local cmd=$1
+                shift
 
-        case $cmd in
-        "chain")
-                ./obj/bootloader/host/hostloader --input ./obj/kernel/kernel8.img
-                ;;
-        esac
-}
+                mnt=${1:-$_DEFAULT_SD_TARGET}
 
-generate_symbol_table() {
-        local _SYMOUT='./obj/tools/symtab/symtab.bin'
-        echo "Generate symbol table to $_SYMOUT"
+
+                case $cmd in
+                        "os")
+                                echo "Copying kernel to remote"
+                                mount /dev/$mnt /tmp/mnt
+                                cp obj/kernel/kernel8.img /tmp/mnt
+                                cp obj/armstub/armstub.bin /tmp/mnt
+                                cp bios/config.txt /tmp/mnt
+                                sync
+                                umount /tmp/mnt
+                                ;;
+                        "bootloader")
+                                echo "Copying bootloader to remote"
+                                mount /dev/$mnt /tmp/mnt
+                                cp obj/bootloader/client/kernel8.img /tmp/mnt
+                                cp obj/armstub/armstub.bin /tmp/mnt
+                                cp bios/config.txt /tmp/mnt
+                                sync
+                                umount /tmp/mnt
+                                ;;
+
+                        "firmware")
+                                mount /dev/$mnt /tmp/mnt
+                                for file in $FIRMWARE_CACHE/*; do
+                                        echo "Copying $file to remote"
+                                        cp $file /tmp/mnt
+                                done
+                                umount /tmp/mnt
+                                ;;
+                        "--help")
+                                echo ""
+                                ;;
+
+                        *)
+                                echo "Subcommand not recognised ($cmd)"
+                                exit 1
+                                ;;
+                esac
+
+
+        }
+
+        _tau_run () {
+                local cmd=$1
+                shift
+
+                case $cmd in
+                        "chain")
+                                ./obj/bootloader/host/hostloader --input ./obj/kernel/kernel8.img
+                                ;;
+                        "qemu")
+                                qemu-system-aarch64 -machine virt -m 1024M -device ramfb -kernel ./obj/kernel/kernel8.img
+                                ;;
+                esac
+        }
+
+        generate_symbol_table() {
+                local _SYMOUT='./obj/tools/symtab/symtab.bin'
+                echo "Generate symbol table to $_SYMOUT"
 
         # Get machine formatted symbol table output
         # replace leading spaces, replace human formatted columns with commas

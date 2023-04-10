@@ -1,7 +1,8 @@
 #include <types.h>
 #include <gpio.h>
 #include <aux.h>
-#include <drv/muart.h>
+#include <drv/serial/muart.h>
+#include <drv/common.h>
 #include <lib/io.h>
 
 #define MUART_FN        gf_alt5
@@ -77,3 +78,13 @@ char muart_readc()
         return aux->AUX_MU_IO_REG & 0xFF;
 }
 
+struct tauos_device_compat bcm_muart_compat[] = {
+        {.compatible = "Some stuff"},
+        { /* Sentinel */}
+};
+
+TAU_DRIVER(bcm_muart) = {
+       .name = "Broadcom mini-uart serial driver",
+       .dclass = DCLASS_SERIAL,
+       .compat = bcm_muart_compat
+};

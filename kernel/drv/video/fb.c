@@ -1,13 +1,13 @@
 #include <mb.h>
 #include <klog.h>
-#include <drv/font.h>
-#include <drv/fb.h>
+#include <drv/video/font.h>
+#include <drv/video/fb.h>
 #include <mm/mm.h>
 #include <lib/common.h>
 #include <lib/io.h>
 #include <lib/mem.h>
 #include <lib/char.h>
-#include <dma.h>
+#include <drv/dma/dma.h>
 
 struct fb_state
 {

@@ -2,7 +2,7 @@
 #include <irq.h>
 #include <lib/io.h>
 #include <lib/common.h>
-#include <gic.h>
+#include <drv/intc/gic.h>
 
 struct irq_interface *irq_dev;
 

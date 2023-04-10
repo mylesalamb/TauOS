@@ -7,8 +7,8 @@
 #define DTB_BEGIN_NODE          0x00000001
 #define DTB_END_NODE            0x00000002
 #define DTB_PROP                0x00000003
-#define DTP_NOP                 0x00000004
-#define DTP_END                 0x00000009
+#define DTB_NOP                 0x00000004
+#define DTB_END                 0x00000009
 
 struct dtb_header {
         ureg32 magic;

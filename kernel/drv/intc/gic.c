@@ -1,5 +1,5 @@
 #include <types.h>
-#include <gic.h>
+#include <drv/intc/gic.h>
 #include <irq.h>
 #include <lib/common.h>
 #include <lib/io.h>

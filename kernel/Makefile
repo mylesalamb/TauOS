@@ -16,7 +16,7 @@ ${EXEC_IMG}: ${EXEC_ELF}
 	@${OC} $^ -O binary $@
 
 ${EXEC_ELF}: ${LINKER_DIR}/linker.ld ${SUBSYSTEMS} ${O_FILES}
-	@echo "[LD] $@"
+	@echo "[LD]: $(shell basename $@)"
 	@${CC} -T $< -o $@ ${C_FLAGS} $(shell find ${OBJ_DIR} -type f -name "*.o") ${L_FLAGS}
 
 .PHONY: $(SUBSYSTEMS)

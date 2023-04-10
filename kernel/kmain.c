@@ -4,15 +4,16 @@
 #include <irq.h>
 #include <klog.h>
 #include <mb.h>
-#include <dma.h>
-#include <drv/ring.h>
-#include <drv/muart.h>
-#include <drv/fb.h>
-#include <drv/sd.h>
+#include <drv/dma/dma.h>
+#include <drv/serial/ring.h>
+#include <drv/serial/muart.h>
+#include <drv/video/fb.h>
+#include <drv/mmc/sd.h>
+#include <drv/common.h>
 #include <fs/mbr.h>
 #include <lib/io.h>
-#include <gic.h>
-#include <timer.h>
+#include <drv/intc/gic.h>
+#include <drv/timer/timer.h>
 #include <mm/mm.h>
 #include <mm/mmu.h>
 #include <mm/alloc.h>
@@ -32,6 +33,7 @@ void kinit(void *dtb)
          */
         klog_init(&ring_console);
         mm_init();
+        dtb_init((struct dtb_header *)mm_ptl(dtb));
         mm_map_peripherals();
 
         aux_init(PHYS_BASE_ADDR);
@@ -64,7 +66,6 @@ void kinit(void *dtb)
         printk("Firmware revision: %h\n", mb_get_firmware_revision());
         printk("Board revision: %h\n", mb_get_board_revision());
         printk("Device tree address: %h\n\n", dtb);
-        dtb_init((struct dtb_header *)mm_ptl(dtb));
         kmain();
 }
 
@@ -77,4 +78,8 @@ void kmain()
         printk("Initialise EMMC2\n");
         sd_init(PHYS_BASE_ADDR);
         mbr_init(&sd_device);
+        struct tauos_driver *drivers = lga_get_array(drivers);
+        klog_debug("Loaded lga at %h\n", drivers);
+        klog_debug("loaded driver from lga %s\n", drivers->name);
+
 }

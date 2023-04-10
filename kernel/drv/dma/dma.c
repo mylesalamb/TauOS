@@ -1,5 +1,5 @@
 #include <types.h>
-#include <dma.h>
+#include <drv/dma/dma.h>
 #include <klog.h>
 #include <mm/mm.h>
 #include <lib/bitmap.h>

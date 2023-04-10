@@ -43,4 +43,31 @@
 		len; \
 	})
 
+
+
+enum driver_class {
+        DCLASS_VIDEO,
+        DCLASS_SERIAL,
+        DCLASS_DMA,
+        DCLASS_INTC,
+        DCLASS_NET,
+        DCLASS_TIMER,
+        DCLASS_MMC,
+};
+
+struct tauos_device_compat 
+{
+        char *compatible;
+};
+
+struct tauos_driver 
+{
+        char *name;
+        enum driver_class dclass;
+        struct tauos_device_compat *compat;
+};
+
+#define TAU_DRIVER(drv_name) \
+        lga_el(struct tauos_driver, drivers, drv_name)
+
 #endif

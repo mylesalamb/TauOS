@@ -1,7 +1,6 @@
 #include <stdarg.h>
 #include <types.h>
 #include <stddef.h>
-#include <drv/muart.h>
 #include <lib/io.h>
 #include <lib/mem.h>
 #include <lib/char.h>

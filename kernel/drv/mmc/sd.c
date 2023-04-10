@@ -1,10 +1,10 @@
 #include <types.h>
 #include <mb.h>
-#include <drv/sd.h>
+#include <drv/mmc/sd.h>
 #include <lib/common.h>
 #include <drv/blk.h>
 #include <klog.h>
-#include <timer.h>
+#include <drv/timer/timer.h>
 
 #define SD_STATE_CMD_INHIBIT BIT(0)
 #define SD_STATE_DAT_INHIBIT BIT(1)
