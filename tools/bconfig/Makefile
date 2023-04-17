@@ -1,10 +1,17 @@
-include ${BUILD_ROOT}/rules.mk
+MOD := bconfig
+CFLAGS := -O2
 
-CC=gcc
-C_FLAGS=-O2 -Wall -pedantic
-EXEC=${OBJ_DIR}/bconfig
+.PHONY: bconfig
 
-all: ${EXEC}
+include $(MKDIR)/templates.mk
 
-${EXEC}: ${O_FILES}
-	${CC} -o $@ ${C_FLAGS} $(shell find ${OBJ_DIR} -type f -name "*.o") 
+$(eval $(call SYSTEM_template,$(MOD),$(CURDIR)))
+$(eval $(call HOSTRULES_template,$(bconfig_SDIR),$(bconfig_ODIR)))
+
+EXECUTABLE := $(bconfig_ODIR)/bconfig
+
+$(EXECUTABLE): $(bconfig_COBJS)
+	$(HOSTCC) -o $@ $^
+
+
+bconfig: $(EXECUTABLE)

@@ -1,3 +1,3 @@
-include ${BUILD_ROOT}/config.mk
-include ${BUILD_ROOT}/rules.mk
+$(eval $(call MODULE_template,mm))
 
+kernel_COBJS += $(mm_COBJS)

@@ -1,25 +1,34 @@
-include ${BUILD_ROOT}/config.mk
-include ${BUILD_ROOT}/rules.mk
+MOD := kernel
 
-SUBSYSTEMS=$(filter-out include/. config/., $(wildcard */.))
+I_FLAGS = -I$(kernel_SDIR)/include
+C_FLAGS = -Wall -ffreestanding -nostdlib -nostartfiles -mgeneral-regs-only
+L_FLAGS = -lgcc
 
-export I_FLAGS=-I ${SRC_DIR}/include
-LINKER_DIR=${SRC_DIR}/config
-EXEC_IMG=${OBJ_DIR}/kernel8.img
-EXEC_ELF=${OBJ_DIR}/kernel8.elf
+.PHONY: kernel
+
+include $(MKDIR)/templates.mk
+include $(ROOTDIR)/mkconfig
+
+$(eval $(call SYSTEM_template,$(MOD),$(CURDIR)))
+$(eval $(call RULES_template,$(kernel_SDIR),$(kernel_ODIR)))
 
 
-all: $(SUBSYSTEMS) ${EXEC_IMG}
 
-${EXEC_IMG}: ${EXEC_ELF}
-	@echo "[OC] $@"
-	@${OC} $^ -O binary $@
+kernel_SUBS := lib fs mm drv
+$(foreach module,$(kernel_SUBS),$(eval include $(kernel_SDIR)/$(module)/Makefile))
 
-${EXEC_ELF}: ${LINKER_DIR}/linker.ld ${SUBSYSTEMS} ${O_FILES}
-	@echo "[LD]: $(shell basename $@)"
-	@${CC} -T $< -o $@ ${C_FLAGS} $(shell find ${OBJ_DIR} -type f -name "*.o") ${L_FLAGS}
+$(eval include $(kernel_SDIR)/march/$(GENERAL_BOARD)/Makefile)
 
-.PHONY: $(SUBSYSTEMS)
-$(SUBSYSTEMS):
-	@$(MAKE) all -C $@
+EXEC_BIN := $(kernel_ODIR)/kernel8.img
+EXEC_ELF := $(kernel_ODIR)/kernel8.elf
+LINK_FLAGS := -T $(kernel_SDIR)/march/$(GENERAL_BOARD)/config/linker.ld
 
+
+$(EXEC_ELF): $(kernel_COBJS) $(kernel_SOBJS) 
+	$(CC) $(LINK_FLAGS) -o $@ $(C_FLAGS) $^ $(L_FLAGS)
+
+$(EXEC_BIN): $(EXEC_ELF)
+	$(OC) $^ -O binary $@
+
+
+kernel: $(EXEC_BIN)

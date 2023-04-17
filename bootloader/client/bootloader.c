@@ -1,7 +1,7 @@
 #include <types.h>
 #include <aux.h>
 #include <gpio.h>
-#include <drv/muart.h>
+#include <muart.h>
 
 #define PHYS_BASE_ADDR 0xFE000000
 #define KERNEL_START 0x80000

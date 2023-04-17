@@ -7,6 +7,7 @@
 #include <lib/io.h>
 #include <lib/mem.h>
 #include <lib/char.h>
+#include <drv/common.h>
 #include <drv/dma/dma.h>
 
 struct fb_state

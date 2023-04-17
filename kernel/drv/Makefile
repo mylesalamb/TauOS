@@ -1,11 +1,5 @@
-include ${BUILD_ROOT}/config.mk
-include ${BUILD_ROOT}/rules.mk
+drv_SUBS := dma intc mmc net serial spi timer video
+$(eval $(call MODULE_template,drv))
 
-SUBSYSTEMS=$(filter-out include/. config/., $(wildcard */.))
-
-all: $(SUBSYSTEMS) $(O_FILES)
-
-.PHONY: $(SUBSYSTEMS)
-$(SUBSYSTEMS):
-	@$(MAKE) all -C $@
-
+drv: dma intc mmc net serial spi timer video
+$(foreach module,$(drv_SUBS),$(eval include $(drv_SDIR)$(module)/Makefile))

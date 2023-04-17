@@ -1,7 +1,7 @@
 #include <types.h>
 #include <gpio.h>
 #include <aux.h>
-#include <drv/muart.h>
+#include <muart.h>
 
 #define MUART_FN        gf_alt5
 #define MUART_RXD0      15

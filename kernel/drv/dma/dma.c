@@ -2,6 +2,7 @@
 #include <drv/dma/dma.h>
 #include <klog.h>
 #include <mm/mm.h>
+#include <drv/common.h>
 #include <lib/bitmap.h>
 #include <lib/mem.h>
 
@@ -133,3 +134,15 @@ void dma_channel_free(u8 channel)
         dma_wait(channel);
         bitmap_clr_bit(dma_channels, channel);
 }
+
+
+struct tauos_device_compat bcm_dma_compat[] = {
+        { .compatible = "brcm,bcm2835-dma" },
+        { /* Sentinel */}
+};
+
+TAU_DRIVER(bcm_dma) = {
+       .name = "Broadcom DMA controller driver",
+       .dclass = DCLASS_DMA,
+       .compat = bcm_dma_compat
+};

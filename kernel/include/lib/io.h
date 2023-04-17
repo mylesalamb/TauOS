@@ -48,6 +48,7 @@ struct console
 
 void io_init(struct console *);
 u64 cprintk(struct console *, const char *, ...);
+u64 vprintk(const char *fmt, va_list va);
 u64 vcprintk(struct console *c, const char *fmt, va_list va);
 u64 printk(const char *, ...);
 u64 sprintf(char *, const char *, ...);

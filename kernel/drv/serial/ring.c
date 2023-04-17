@@ -5,7 +5,7 @@
 void ring_writes(char *);
 void ring_writec(char);
 
-#define BUFFER_SIZE (4096 * 3)
+#define BUFFER_SIZE (4096 * 10)
 
 extern char __write_buffer_start;
 static u64 offset = 0;

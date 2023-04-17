@@ -1,6 +1,8 @@
 #ifndef MM_H
 #define MM_H 1
 
+#include <dtb.h>
+
 /* For arm only config of the mmu largely copied from sergeys tutorial */
 /* Which I will of course refactor later */
 
@@ -35,7 +37,7 @@
 #define TCR_VALUE			(TCR_T0SZ | TCR_T1SZ | TCR_TG0_4K | TCR_TG1_4K)
 
 #define MM_LOGICAL_START 0xffff000000000000
-void mm_init();
+void mm_init(struct dtb_header *);
 void mm_map_peripherals();
 
 void *mm_ltp(void *p);

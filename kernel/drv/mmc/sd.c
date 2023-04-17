@@ -4,6 +4,7 @@
 #include <lib/common.h>
 #include <drv/blk.h>
 #include <klog.h>
+#include <drv/common.h>
 #include <drv/timer/timer.h>
 
 #define SD_STATE_CMD_INHIBIT BIT(0)
@@ -471,4 +472,15 @@ struct blk_dev sd_device = {
         .seek = sd_seek,
         .read = sd_read,
         .write = sd_write,
+};
+
+struct tauos_device_compat emmc2_compat[] = {
+        { .compatible = "brcm,bcm2711-emmc2" },
+        {}
+};
+
+TAU_DRIVER(emmc2) = {
+        .name = "Broadcom EMMC2 driver",
+        .dclass = DCLASS_MMC,
+        .compat = emmc2_compat
 };

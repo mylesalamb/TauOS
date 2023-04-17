@@ -1,8 +1,10 @@
-SUBSYSTEMS=$(wildcard */.)
 
-all: $(SUBSYSTEMS) 
+.PHONY: bootloader host
 
-.PHONY: $(SUBSYSTEMS)
-$(SUBSYSTEMS):
-	@echo $(SUBSYSTEMS)
-	$(MAKE) all -C $@
+host:
+	$(MAKE) -C $(CURDIR)/$@/ $@
+
+client:
+	$(MAKE) -C $(CURDIR)/$@/ $@
+
+bootloader: host

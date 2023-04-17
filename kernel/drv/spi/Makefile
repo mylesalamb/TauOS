@@ -1,3 +1,3 @@
-include ${BUILD_ROOT}/config.mk
-include ${BUILD_ROOT}/rules.mk
+$(eval $(call MODULE_template,drv_spi))
 
+kernel_COBJS += $(drv_spi_COBJS)

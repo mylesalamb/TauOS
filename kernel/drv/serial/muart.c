@@ -79,7 +79,7 @@ char muart_readc()
 }
 
 struct tauos_device_compat bcm_muart_compat[] = {
-        {.compatible = "Some stuff"},
+        { .compatible = "brcm,bcm2835-aux-uart" },
         { /* Sentinel */}
 };
 

@@ -1,10 +1,17 @@
-include ${BUILD_ROOT}/rules.mk
+MOD := symtab
+CFLAGS := -O2
 
-CC=gcc
-C_FLAGS=-O2 -Wall -pedantic
-EXEC=${OBJ_DIR}/symtab
+.PHONY: symtab
 
-all: ${EXEC}
+include $(MKDIR)/templates.mk
 
-${EXEC}: ${O_FILES}
-	${CC} -o $@ ${C_FLAGS} $(shell find ${OBJ_DIR} -type f -name "*.o") 
+$(eval $(call SYSTEM_template,$(MOD),$(CURDIR)))
+$(eval $(call HOSTRULES_template,$(symtab_SDIR),$(symtab_ODIR)))
+
+EXECUTABLE := $(symtab_ODIR)/symtab
+
+$(EXECUTABLE): $(symtab_COBJS)
+	$(HOSTCC) -o $@ $^
+
+
+symtab: $(EXECUTABLE)

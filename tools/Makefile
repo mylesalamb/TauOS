@@ -1,8 +1,11 @@
-SUBSYSTEMS=$(wildcard */.)
 
-all: $(SUBSYSTEMS) 
+.PHONY: bconfig symtab tools
 
-.PHONY: $(SUBSYSTEMS)
-$(SUBSYSTEMS):
-	@echo $(SUBSYSTEMS)
-	$(MAKE) all -C $@
+symtab:
+	$(MAKE) -C $(CURDIR)/$@/ $@
+
+bconfig:
+	$(MAKE) -C $(CURDIR)/$@/ $@
+
+
+tools: symtab bconfig

@@ -177,6 +177,14 @@ u64 vcprintk(struct console *c, const char *fmt, va_list va)
         return retval;
 }
 
+u64 vprintk(const char *fmt, va_list va)
+{
+        u64 retval;
+        retval = vcprintk(_io_dev, fmt, va);
+
+        return retval;
+}
+
 u64 printk(const char *fmt, ...)
 {
         u64 retval;

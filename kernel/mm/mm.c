@@ -30,8 +30,15 @@ struct mm_area _mm_get_board_memory()
         return phys;
 }
 
-
-void mm_init()
+/**
+ * Initialises the memory subsystem of the operating, we begin by mapping in the remaining
+ * memory of the operating system. 
+ *
+ * We then initialise the pmm, using the information about installed memory
+ * @param dtb: The device tree to initialise drivers from
+ *              as a physical address.
+ */
+void mm_init(struct dtb_header *dtb)
 {
         klog_debug("Start mm_init\n");
         /* First we need to finish mapping the kernel into the logical space */

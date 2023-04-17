@@ -1,10 +1,17 @@
-include ${BUILD_ROOT}/rules.mk
+MOD := host
+CFLAGS := -O2
 
-CC=gcc
-C_FLAGS=-O2 -Wall -pedantic
-EXEC=${OBJ_DIR}/hostloader
+.PHONY: host
 
-all: ${EXEC}
+include $(MKDIR)/templates.mk
 
-${EXEC}: ${O_FILES}
-	${CC} -o $@ ${C_FLAGS} $(shell find ${OBJ_DIR} -type f -name "*.o") 
+$(eval $(call SYSTEM_template,$(MOD),$(CURDIR)))
+$(eval $(call HOSTRULES_template,$(host_SDIR),$(host_ODIR)))
+
+EXECUTABLE := $(host_ODIR)/hostloader
+
+$(EXECUTABLE): $(host_COBJS)
+	$(HOSTCC) -o $@ $^
+
+
+host: $(EXECUTABLE)

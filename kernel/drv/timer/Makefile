@@ -1,3 +1,3 @@
-include ${BUILD_ROOT}/config.mk
-include ${BUILD_ROOT}/rules.mk
+$(eval $(call MODULE_template,drv_timer))
 
+kernel_COBJS += $(drv_timer_COBJS)
