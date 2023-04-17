@@ -1,25 +1,23 @@
-include ${BUILD_ROOT}/config.mk
-include ${BUILD_ROOT}/rules.mk
-
-SUBSYSTEMS=$(filter-out include/. config/., $(wildcard */.))
-
-export I_FLAGS=-I ${SRC_DIR}/include
-LINKER_DIR=${SRC_DIR}/config
-EXEC_IMG=${OBJ_DIR}/kernel8.img
-EXEC_ELF=${OBJ_DIR}/kernel8.elf
+kernel_SUBS := lib fs mm
+$(eval $(call MODULE_template,kernel))
+$(eval include $(ROOTDIR)/mkconfig)
 
 
-all: $(SUBSYSTEMS) ${EXEC_IMG}
+I_FLAGS = -I$(kernel_SDIR)/include
+C_FLAGS = -Wall -ffreestanding -nostdlib -nostartfiles -mgeneral-regs-only
+L_FLAGS = -lgcc
+LINK_FLAGS = -T $(kernel_SDIR)march/$(GENERAL_BOARD)/config/linker.ld
 
-${EXEC_IMG}: ${EXEC_ELF}
-	@echo "[OC] $@"
-	@${OC} $^ -O binary $@
+$(eval include $(kernel_SDIR)march/$(GENERAL_BOARD)/Makefile)
+$(eval $(call RULES_template,$(kernel_SDIR),$(kernel_ODIR)))
+$(foreach module,$(kernel_SUBS),$(eval include $(kernel_SDIR)$(module)/Makefile))
 
-${EXEC_ELF}: ${LINKER_DIR}/linker.ld ${SUBSYSTEMS} ${O_FILES}
-	@echo "[LD]: $(shell basename $@)"
-	@${CC} -T $< -o $@ ${C_FLAGS} $(shell find ${OBJ_DIR} -type f -name "*.o") ${L_FLAGS}
+$(kernel_ODIR)kernel8.elf: $(kernel_OBJS) 
+	${CC} $(LINK_FLAGS) -o $@ ${C_FLAGS} $^ ${L_FLAGS}
 
-.PHONY: $(SUBSYSTEMS)
-$(SUBSYSTEMS):
-	@$(MAKE) all -C $@
+$(kernel_ODIR)kernel8.img: $(kernel_ODIR)kernel8.elf
+	${OC} $^ -O binary $@
+
+kernel: $(kernel_ODIR)kernel8.img
+	@echo "Built kernel for $(GENERAL_BOARD)"
 

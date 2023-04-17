@@ -10,7 +10,7 @@
 BUILD_ROOT=`pwd`
 CC_DIR="gcc-arm-10.3-2021.07-x86_64-aarch64-none-elf"
 CROSS_CC="${BUILD_ROOT}/${CC_DIR}/bin"
-PATH=$CROSS_CC:$PATH
+
 COMPILER_SRC="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-a/10.3-2021.07/binrel/${CC_DIR}.tar.xz"
 
 FIRMWARE_REVISION='3b0b0c730dd09415978214a1e60ceb37ec47ca80'
@@ -24,6 +24,9 @@ export PATH
 _DEFAULT_OS_TARGET='all'
 _DEFAULT_DEV_TARGET='/dev/mmcblk0'
 _DEFAULT_SD_TARGET='mmcblk0p1'
+_DEFAULT_CROSS_CC_DIR="${BUILD_ROOT}/cross-cc"
+
+PATH="${_DEFAULT_CROSS_CC_DIR}/bin":$PATH
 
 main() {
         local cmd=$1
@@ -121,7 +124,8 @@ _tau_build () {
                                 ;;
                         "toolchain")
                                 wget "${COMPILER_SRC}"
-                                tar -xvf $CC_DIR.tar.xz
+                                mkdir -p $_DEFAULT_CROSS_CC_DIR
+                                tar -xvf $CC_DIR.tar.xz -C $_DEFAULT_CROSS_CC_DIR --strip-components=1
                                 ;;
                         *)
                                 echo "Subcommand not recognised ($cmd)"

@@ -1,8 +1,6 @@
-SUBSYSTEMS=$(wildcard */.)
 
-all: $(SUBSYSTEMS) 
+tools_SUBS := symtab bconfig
+$(eval $(call MODULE_template,tools))
 
-.PHONY: $(SUBSYSTEMS)
-$(SUBSYSTEMS):
-	@echo $(SUBSYSTEMS)
-	$(MAKE) all -C $@
+tools: symtab bconfig
+$(foreach module,$(tools_SUBS),$(eval include $(tools_SDIR)$(module)/Makefile))

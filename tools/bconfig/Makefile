@@ -1,10 +1,11 @@
-include ${BUILD_ROOT}/rules.mk
+MOD := bconfig
 
-CC=gcc
-C_FLAGS=-O2 -Wall -pedantic
-EXEC=${OBJ_DIR}/bconfig
+$(eval $(call MODULE_template,$(MOD)))
+$(eval $(call HOSTRULES_template,$($(MOD)_SDIR),$($(MOD)_ODIR)))
 
-all: ${EXEC}
 
-${EXEC}: ${O_FILES}
-	${CC} -o $@ ${C_FLAGS} $(shell find ${OBJ_DIR} -type f -name "*.o") 
+
+$(bconfig_ODIR)bconfig: $($(MOD)_OBJS)
+	$(HOSTCC) -o $@ $^
+
+bconfig: $(bconfig_ODIR)bconfig

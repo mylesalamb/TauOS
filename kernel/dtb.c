@@ -5,6 +5,27 @@
 #include <lib/common.h>
 #include <lib/io.h>
 
+void dtb_find_node(struct dtb_header *header)
+{
+
+}
+
+void dtb_iter_reserved(struct dtb_header *header, void (*cb)(u64, u64))
+{
+        struct dtb_mem_reserve *csr;
+        u32 offset = btlhw(header->memory_offset);
+        
+        csr = (struct dtb_mem_reserve *)(((u8 *)header) + offset);
+
+        while(csr->address || csr->size)
+        {
+                u64 address = btlw(csr->address);
+                u64 len = btlw(csr->size);
+                cb(address, len);
+                csr++;
+        }
+
+}
 
 void dtb_dump_reserved(struct dtb_header *header)
 {

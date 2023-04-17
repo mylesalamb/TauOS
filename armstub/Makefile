@@ -1,18 +1,12 @@
-include ${BUILD_ROOT}/config.mk
-include ${BUILD_ROOT}/rules.mk
+MOD = armstub
+$(eval $(call MODULE_template,$(MOD)))
+$(eval $(call RULES_template,$($(MOD)_SDIR),$($(MOD)_ODIR)))
+
+$(armstub_ODIR)armstub8.elf: $($(MOD)_SOBJS)
+	$(LD) --section-start=.text=0 -o $@ $^
 
 
-EXEC_IMG=${OBJ_DIR}/armstub.bin
-EXEC_ELF=${OBJ_DIR}/armstub.elf
+$(armstub_ODIR)armstub.bin: $(armstub_ODIR)armstub8.elf
+	$(OC) $^ -O binary $@
 
-all: ${EXEC_IMG}
-
-${EXEC_IMG}: ${EXEC_ELF}
-	@echo "[OC] $@"
-	@${OC} $^ -O binary $@
-
-${EXEC_ELF}: ${O_FILES}
-	@echo "[LD] $@"
-	@${LD} --section-start=.text=0 -o $@ $(shell find ${OBJ_DIR} -type f -name "*.o") 
-
-
+armstub: $(armstub_ODIR)armstub.bin

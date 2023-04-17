@@ -19,11 +19,20 @@
 #include <mm/alloc.h>
 #include <dtb.h>
 
+/* TODO: remove this when we init drivers from device tree */
 #define PHYS_BASE_ADDR    (0xFE000000 | 0xffff000000000000)
-#define DEVICE_MMIO_BEGIN 0x0FC000000
-#define DEVICE_MMIO_END   0x100000000
+
 
 void kmain();
+
+/**
+ * kinit is responsible for parsing the flattened device tree
+ * passed to the kernel and initiliasing drivers the kernel
+ * has been loaded with, and initiliasing the kernel memory
+ * subsytem
+ * 
+ * @param dtb: The device tree to initialise drivers from
+ */
 void kinit(void *dtb)
 {
         /* 

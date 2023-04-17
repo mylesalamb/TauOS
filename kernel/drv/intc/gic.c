@@ -1,5 +1,6 @@
 #include <types.h>
 #include <drv/intc/gic.h>
+#include <drv/common.h>
 #include <irq.h>
 #include <lib/common.h>
 #include <lib/io.h>
@@ -184,3 +185,14 @@ struct gic_regs *gic_get()
 {
         return &gic_dev;
 }
+
+struct tauos_device_compat gicv2_compat[] = {
+        { .compatible = "arm,gic400" },
+        {}
+};
+
+TAU_DRIVER(gicv2) = {
+        .name = "Arm generic interrupt controller driver",
+        .dclass = DCLASS_INTC,
+        .compat = gicv2_compat
+};

@@ -1,3 +1,3 @@
-include ${BUILD_ROOT}/config.mk
-include ${BUILD_ROOT}/rules.mk
+$(eval $(call MODULE_template,lib))
 
+kernel_OBJS += $(lib_OBJS)
