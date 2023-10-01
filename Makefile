@@ -33,8 +33,8 @@ bootloader:
 kernel:
 	$(MAKE) -C $(CURDIR)/$@/ $@
 
-userspace:
-	$(MAKE) -C $(CURDIR)/$@/ $@
+# userspace:
+# 	$(MAKE) -C $(CURDIR)/$@/ $@
 
 
 

@@ -69,7 +69,7 @@ void kinit(struct dtb_header *dtbp)
         
         klog_init(&ring_console);
         mm_init(dtbl);
-        dtb_init((struct dtb_header *)mm_ptl(dtbl));
+        // dtb_init((struct dtb_header *)mm_ptl(dtbl));
         mm_map_peripherals();
 
         aux_init(PHYS_BASE_ADDR);

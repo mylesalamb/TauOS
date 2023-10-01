@@ -18,3 +18,11 @@ u64 bconcat(void *addr, u8 s)
 
         return retval;
 }
+
+void *balign(void *addr, u64 alignment)
+{
+        u64 iaddr = (u64)addr;
+        u64 mask = alignment - 1;
+
+        return (void *)((iaddr + mask) & ~mask);
+}

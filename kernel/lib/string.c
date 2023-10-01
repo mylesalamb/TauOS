@@ -44,6 +44,50 @@ u64 strlen(char *src)
         return len;
 }
 
+/**
+ * @brief Given a string that contains a hex string return
+ *        the integer representation of that number
+ * 
+ * @param src The hex string
+ * @return u64 the integer containing the hex string
+ */
+u64 hstol(char *src)
+{
+        u64 retval = 0;
+
+        while(*src)
+        {
+                retval <<= 4;
+                if( *src >= 'a' && *src <= 'f' )
+                {
+                        retval += (*src - 'a') + 10;
+                }
+
+                if(*src >= 'A' && *src <= 'F' )
+                {
+                        retval += (*src - 'A') + 10;
+                }
+
+                if(*src >= '0' && *src <= '9' )
+                {
+                        retval += (*src - '0');
+                }
+
+
+                src++;
+        }
+
+        return retval;
+}
+
+char *strend(char *src)
+{
+        while(*src)
+                src++;
+
+        return ++src;
+}
+
 char *strcpy(char *src, char *dst)
 {
         while(*src) {

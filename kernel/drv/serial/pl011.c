@@ -47,7 +47,7 @@ struct tauos_device_compat pl011_compat[] = {
         { /* Sentinel */}
 };
 
-TAU_DRIVER(bcm_muart) = {
+TAU_DRIVER(qemu_uart) = {
        .name = "ARM PL011 serial driver",
        .dclass = DCLASS_SERIAL,
        .compat = pl011_compat
