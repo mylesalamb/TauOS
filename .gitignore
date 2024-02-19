@@ -1,5 +1,6 @@
 gcc-arm-10.3-2021.07-x86_64-aarch64-none-elf/*
 gcc-arm-10.3-2021.07-x86_64-aarch64-none-elf.tar.xz
+cross-cc/
 obj/
 docs/
 .fw/
@@ -29,4 +30,7 @@ docs/
 
 # Executables
 *.out
+
+*.c~
+*.h~
 
