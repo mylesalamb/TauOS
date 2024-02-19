@@ -8,10 +8,10 @@
 
 # Cross compiler should be on the path so we can use the commands normally
 BUILD_ROOT=`pwd`
-CC_DIR="gcc-arm-10.3-2021.07-x86_64-aarch64-none-elf"
+CC_DIR="arm-gnu-toolchain-13.2.rel1-x86_64-aarch64-none-elf"
 CROSS_CC="${BUILD_ROOT}/${CC_DIR}/bin"
-
-COMPILER_SRC="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-a/10.3-2021.07/binrel/${CC_DIR}.tar.xz"
+# https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-x86_64-aarch64-none-elf.tar.xz?rev=a05df3001fa34105838e6fba79ee1b23&hash=D63F63D13F01626D207019956E7122B5
+COMPILER_SRC="https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/${CC_DIR}.tar.xz"
 
 FIRMWARE_REVISION='3b0b0c730dd09415978214a1e60ceb37ec47ca80'
 FIRMWARE_REPO="https://raw.githubusercontent.com/raspberrypi/firmware/$FIRMWARE_REVISION/boot/"

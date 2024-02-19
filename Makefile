@@ -1,42 +1,58 @@
 # TauOS top level makefile
 
 
-MODULES 	:= tools armstub bootloader kernel userspace
+MODULES 	:= kernel
 # Various config directories
 export ROOTDIR 		:= $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 export MKDIR 		:= $(ROOTDIR)mk/
 export OBJDIR 		:= $(ROOTDIR)obj/
 export BINDIR		:= $(ROOTDIR)bin/
 export ARMCCDIR		:= $(ROOTDIR)cross-cc/bin/
-export CCPREFIX		:= aarch64-none-elf
+export CCPREFIX		:= $(ARMCCDIR)aarch64-none-elf
 export CC 			:= $(CCPREFIX)-gcc
 export AS 			:= $(CCPREFIX)-as
 export LD 			:= $(CCPREFIX)-ld
 export OC			:= $(CCPREFIX)-objcopy
-export HOSTCC 		:= gcc
-export PATH := $(ARMCCDIR):$(PATH)
 
+export HOSTCC 		:= /usr/bin/gcc
+export FIND 		:= /usr/bin/find
+export XARGS		:= /usr/bin/xargs
+export INDENT 		:= /usr/bin/indent
+export QEMU			:= /usr/bin/qemu-system-aarch64
 all: $(MODULES)
 
 # END of templates, the default all rull should just be all of the modules
-.PHONY: $(MODULES) clean genconfig
-
-tools:
-	$(MAKE) -C $(CURDIR)/$@/ $@
-
-armstub:
-	$(MAKE) -C $(CURDIR)/$@/ $@
-
-bootloader:
-	$(MAKE) -C $(CURDIR)/$@/ $@
+.PHONY: $(MODULES) clean config lint
 
 kernel:
 	$(MAKE) -C $(CURDIR)/$@/ $@
 
-# userspace:
-# 	$(MAKE) -C $(CURDIR)/$@/ $@
-
+run:
+	$(QEMU) -machine virt -m 1024M -kernel $(OBJDIR)kernel/kernel.img -cpu cortex-a53 -display gtk
+debug:
+	$(QEMU) -s -S -machine virt -m 1024M -kernel $(OBJDIR)kernel/kernel.elf -cpu cortex-a53 -display gtk
 
 
 clean:
 	rm -rf $(OBJDIR)
+
+lint:
+	$(FIND) $(ROOTDIR)/kernel -name '*.[c,h]' | $(XARGS) $(INDENT) -nbad -bap -nbc -bbo -hnl -br -brs -c33 -cd33 -ncdb -ce -ci4 -cli0 -d0 -di1 -nfc1 -i8 -ip0 -l80 -lp -npcs -nprs -npsl -sai -saf -saw -ncs -nsc -sob -nfca -cp33 -ss -ts8 -il1
+
+config:
+
+	@echo "ROOTDIR  := $(ROOTDIR)"
+	@echo "MKDIR    := $(MKDIR)"
+	@echo "OBJDIR   := $(OBJDIR)"
+	@echo "BINDIR   := $(BINDIR)"
+	@echo "ARMCCDIR := $(ARMCCDIR)"
+	@echo "CCPREFIX := $(CCPREFIX)"
+	@echo "CC       := $(CC)"
+	@echo "AS       := $(AS)"
+	@echo "LD       := $(LD)"
+	@echo "OC       := $(OC)"
+	@echo "HOSTCC   := $(HOSTCC)"
+	@echo "FIND     := $(FIND)"
+	@echo "XARGS    := $(XARGS)"
+	@echo "INDENT   := $(INDENT)"
+	@echo "QEMU     := $(QEMU)"

@@ -59,7 +59,7 @@ $(2)%.S.o: $(1)%.S
 	@${CC} ${C_FLAGS} -c $$^ -o $$@  ${I_FLAGS}
 $(2)%.c.o: $(1)%.c
 	@mkdir -p $$(dir $$@)
-	@echo "cc: $$^ => $$@"
+	@echo "cc: $$(patsubst $$(ROOTDIR),"",$($$^)) => $$@"
 	@${CC} ${C_FLAGS} -c $$^ -o $$@  ${I_FLAGS}
 endef
 
