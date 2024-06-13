@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+export SCRIPTDIR="$(dirname $0)"
+source "${SCRIPTDIR}"/common
+
+gdb=/usr/bin/aarch64-linux-gnu-gdb
+
+${SCRIPTDIR}/gdbgui -g "${gdb}"

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+export SCRIPTDIR="$(dirname $0)"
+source "${SCRIPTDIR}"/common
+
+PYTHON='/usr/bin/python'
+VENV_DIR="${SCRIPTDIR}"/.venv
+PIP="${VENV_DIR}/bin/pip"
+
+
+
+$PYTHON -m venv "${VENV_DIR}"
+
+${PIP} install gdbgui --require-virtualenv
+
+ln -fs $(realpath "${VENV_DIR}"/bin/gdbgui) ${SCRIPTDIR}/gdbgui

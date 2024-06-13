@@ -1,7 +1,7 @@
 MOD := kernel
 
 I_FLAGS = -I$(kernel_SDIR)/include
-C_FLAGS = -Wall -ffreestanding -nostdlib -nostartfiles -mgeneral-regs-only -g
+C_FLAGS = -Wall -ffreestanding -nostdlib -nostartfiles -mgeneral-regs-only -g -pie
 L_FLAGS = -lgcc
 
 .PHONY: kernel

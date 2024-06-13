@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+export SCRIPTDIR="$(dirname $0)"
+source "${SCRIPTDIR}"/common
+
+toolchain_file="arm-gnu-toolchain-13.2.rel1-x86_64-aarch64-none-elf.tar.xz"
+toolchain_url="https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu/13.2.rel1/binrel/${toolchain_file}"
+
+function help_text {
+  printf "usage: $(basename ${0}) [-i INSTALL_DIR]\n\n" 1>&2
+  printf "options:\n" 1>&2
+  printf "  %-20s %s\n" "-i, --install-dir" "Directory to install toolchain" 1>&2
+}
+
+
+INSTALL_DIR="${SCRIPTDIR}/cross-cc"
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -i|--install-dir)
+      INSTALL_DIR="$2"
+      shift 2
+      ;;
+    -h)
+      help_text
+      exit 0
+      ;;
+    -*|--*|*)
+      echo "Bad argument: ${1}" 1>&2
+      exit 1
+      ;;
+  esac
+done
+
+mkdir -p "${INSTALL_DIR}"
+echo "Pulling compiler binaries" 1>&2
+curl "$toolchain_url" > "${INSTALL_DIR}"/"${toolchain_file}"
+
+echo "Decompressing" 1>&2
+tar -xvf "${INSTALL_DIR}"/"${toolchain_file}" -C "${INSTALL_DIR}" --strip-components=1
+
+echo "Cleaning up" 1>&2
+rm "${INSTALL_DIR}"/"${toolchain_file}"
+
+echo "Installed to: ${INSTALL_DIR}" 1>&2

@@ -7,7 +7,7 @@ export ROOTDIR 		:= $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 export MKDIR 		:= $(ROOTDIR)mk/
 export OBJDIR 		:= $(ROOTDIR)obj/
 export BINDIR		:= $(ROOTDIR)bin/
-export ARMCCDIR		:= $(ROOTDIR)cross-cc/bin/
+export ARMCCDIR		:= $(ROOTDIR)bin/cross-cc/bin/
 export CCPREFIX		:= $(ARMCCDIR)aarch64-none-elf
 export CC 			:= $(CCPREFIX)-gcc
 export AS 			:= $(CCPREFIX)-as
@@ -30,7 +30,7 @@ kernel:
 run:
 	$(QEMU) -machine virt -m 1024M -kernel $(OBJDIR)kernel/kernel.img -cpu cortex-a53 -display gtk
 debug:
-	$(QEMU) -s -S -machine virt -m 1024M -kernel $(OBJDIR)kernel/kernel.elf -cpu cortex-a53 -display gtk
+	$(QEMU) -s -S -machine virt -m 1024M -kernel $(OBJDIR)kernel/kernel.img -cpu cortex-a53 -display gtk
 
 
 clean:
