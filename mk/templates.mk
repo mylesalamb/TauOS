@@ -55,11 +55,11 @@ endef
 define RULES_template =
 $(2)%.S.o: $(1)%.S
 	@mkdir -p $$(dir $$@)
-	@echo "cc: $$^ => $$@"
+	@printf "cc: %-30s => %s\n" "$$(patsubst $(ROOTDIR)%,%,$$^)" "$$(patsubst $(ROOTDIR)%,%,$$@)"
 	@${CC} ${C_FLAGS} -c $$^ -o $$@  ${I_FLAGS}
 $(2)%.c.o: $(1)%.c
 	@mkdir -p $$(dir $$@)
-	@echo "cc: $$(patsubst $$(ROOTDIR),"",$($$^)) => $$@"
+	@printf "cc: %-30s => %s\n" "$$(patsubst $(ROOTDIR)%,%,$$^)" "$$(patsubst $(ROOTDIR)%,%,$$@)"
 	@${CC} ${C_FLAGS} -c $$^ -o $$@  ${I_FLAGS}
 endef
 

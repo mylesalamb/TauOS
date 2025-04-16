@@ -1,7 +1,7 @@
 # TauOS top level makefile
 
 
-MODULES 	:= kernel
+MODULES 	:= kernel initrd
 # Various config directories
 export ROOTDIR 		:= $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 export MKDIR 		:= $(ROOTDIR)mk/
@@ -27,14 +27,18 @@ all: $(MODULES)
 kernel:
 	$(MAKE) -C $(CURDIR)/$@/ $@
 
+initrd:
+	$(MAKE) -C $(CURDIR)/$@/ $@
+
 run:
-	$(QEMU) -machine virt -m 1024M -kernel $(OBJDIR)kernel/kernel.img -cpu cortex-a53 -display gtk
+	$(QEMU) -machine virt -m 256M -kernel $(OBJDIR)kernel/kernel.img -cpu cortex-a53 -nographic -initrd $(OBJDIR)initrd/initrd.tar -append foo=bar
 debug:
-	$(QEMU) -s -S -machine virt -m 1024M -kernel $(OBJDIR)kernel/kernel.img -cpu cortex-a53 -display gtk
+	$(QEMU) -s -S -machine virt -m 256M -kernel $(OBJDIR)kernel/kernel.img -cpu cortex-a53 -nographic -initrd $(OBJDIR)initrd/initrd.tar
 
 
 clean:
 	rm -rf $(OBJDIR)
+	$(FIND) $(ROOTDIR) -name '*.[c,h]~' -exec rm {} \;
 
 lint:
 	$(FIND) $(ROOTDIR)/kernel -name '*.[c,h]' | $(XARGS) $(INDENT) -nbad -bap -nbc -bbo -hnl -br -brs -c33 -cd33 -ncdb -ce -ci4 -cli0 -d0 -di1 -nfc1 -i8 -ip0 -l80 -lp -npcs -nprs -npsl -sai -saf -saw -ncs -nsc -sob -nfca -cp33 -ss -ts8 -il1

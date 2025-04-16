@@ -33,10 +33,14 @@ _entry:
 
 _start:
 
+    /* Save the address of the FDT */
+    mov x23, x0
     /* Read core id and halt non primary cores */
     mrs x0, mpidr_el1
     and x0, x0, #3
     cbnz x0, hlt
+
+    mrs x0, CurrentEL
 
     /* Perform kernel 'reloc' adjust relative addresses s.t they match the load address */
     /* x0, contains the address the kernel was loaded to  */
@@ -76,6 +80,8 @@ bss_loop:
     b bss_loop
 
 bss_loop_end:
+    /* Restore FDT and jump to the kernel */
+    mov x0, x23
     ldr x1, =kinit
     ldr x2, =__kernel_init_stack
     mov sp, x2
