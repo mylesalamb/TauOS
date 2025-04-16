@@ -4,5 +4,6 @@
 void pl011_init();
 void pl011_puts(const char *const);
 void pl011_putc(const char);
+char pl011_readc();
 
 #endif

@@ -1,3 +1,5 @@
 bin/cross-cc/*
 bin/.venv
 bin/gdbgui
+obj/
+*~
