@@ -2,7 +2,7 @@ ENTRY(_entry)
 SECTIONS
 {
         /* Dummy load address */
-        . = 0x10000;
+        . = 0x0000;
         __LOW_MEMORY = .;
         __START = .;
         .text : ALIGN(4096) {
@@ -39,10 +39,20 @@ SECTIONS
         	__BSS_END = .;
         } : data_segment
 
-        . = ALIGN(128);
-        . += 4096;
-        __kernel_init_stack = .;
+
+        .idmap_data : ALIGN(4096) {
+                __IDMAP_DATA_START = .;
+                . += 4096;
+                __kernel_init_stack = .;
+                __idmap_blocks = .;
+                . += 4096 * 3;
+                __idmap_blocks_end = .;
+                __IDMAP_DATA_END = .;
+        } : data_segment
+
         __END = .;
+
+
 }
 
 PHDRS {

@@ -19,6 +19,9 @@ extern char __DATA_END;
 extern char __BSS_START;
 extern char __BSS_END;
 
+extern char __IDMAP_DATA_START;
+extern char __IDMAP_DATA_END;
+
 int platform_early_scan_memory(const struct fdt_header *h);
 int platform_early_scan_chosen(const struct fdt_header *h);
 
@@ -115,6 +118,9 @@ int platform_early_scan_memory(const struct fdt_header *h)
 			  (uintptr_t) & __DATA_START);
 	earlymem_add_used((uintptr_t) & __BSS_START,
 			  (uintptr_t) & __BSS_END - (uintptr_t) & __BSS_START);
+	earlymem_add_used((uintptr_t) & __IDMAP_DATA_START,
+			  (uintptr_t) & __IDMAP_DATA_END -
+			  (uintptr_t) & __IDMAP_DATA_START);
 
 	return 0;
 }

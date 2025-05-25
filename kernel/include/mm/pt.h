@@ -1,0 +1,30 @@
+#ifndef MM_PT_H
+#define MM_PT_H 1
+
+#define MMU_BLK_LEN 512
+#define MMU_BLK_SIZE (MMU_BLK_LEN * 8)
+#define MMU_PGD_SHIFT 39
+#define MMU_PUD_SHIFT 30
+
+#define MMU_DCR_VALID           (1)
+#define MMU_DCR_BLOCK           (0 << 1)
+#define MMU_DCR_TABLE           (1 << 1)
+
+#define MMU_DCR_UXN             (1UL <<  54)
+#define MMU_DCR_PXN             (1UL << 53)
+#define MMU_DCR_CONTINUOUS      (1UL << 52)
+#define MMU_DCR_NG              (1UL << 11)
+#define MMU_DCR_AF              (1UL << 10)
+#define MMU_DCR_SH_INNER        (2UL << 8)
+#define MMU_DCR_SH_OUTER        (3UL << 8)
+#define MMU_DCR_ATTR_AP_RW_N    (0 << 6)
+#define MMU_DCR_ATTR_AP_RW_RW   (1 << 6)
+#define MMU_DCR_ATTR_AP_RO_N    (2 << 6)
+#define MMU_DCR_ATTR_AP_RO_RO   (3 << 6)
+#define MMU_DCR_NS              (1 << 5)
+
+/* Derived from MAIR_EL1 see sysregs.h */
+#define MMU_DCR_ATTR_NORM       (0 << 2)
+#define MMU_DCR_ATTR_DEVICE     (1 << 2)
+
+#endif

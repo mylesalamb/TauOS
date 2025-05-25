@@ -3,6 +3,9 @@
 #include <printk.h>
 #include <lib/fdt.h>
 #include <platform.h>
+#include <mm/mmu.h>
+
+extern pg_table __idmap_blocks;
 
 void __attribute__((noreturn))panic(const char *msg)
 {
@@ -24,6 +27,8 @@ void __attribute__((noreturn))kinit(struct fdt_header *dtb)
 	if (r < 0) {
 		panic("bootloader passed corrupted device tree!");
 	}
+
+	mmu_dump(&__idmap_blocks);
 
 	panic("kinit finished");
 }
