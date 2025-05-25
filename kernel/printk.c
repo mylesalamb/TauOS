@@ -12,7 +12,12 @@
 #define _PRINT_ZERO_PAD     (1<<6)
 
 /* Some function to call when there are calls to printk */
-static void (*_writes)(const char *);
+void _writes_void(const char *s)
+{
+	(void)s;
+}
+
+static void (*_writes)(const char *) = _writes_void;
 
 /* Basic functions for printk parsing */
 static inline bool is_digit(char c)

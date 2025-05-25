@@ -1,8 +1,19 @@
+#include <mm/pt.h>
+
+#define PAGES(va_start, va_end, shift) (((va_end >> shift) - (va_start >> shift)) + 1)
+#define PGD_PAGES(va_start, va_end) (PAGES(va_start, va_end, MMU_PGD_SHIFT))
+#define PUD_PAGES(va_start, va_end) (PAGES(va_start, va_end, MMU_PUD_SHIFT))
+#define PMD_PAGES(va_start, va_end) (PAGES(va_start, va_end, MMU_PMD_SHIFT))
+#define PTE_PAGES(va_start, va_end) (PAGES(va_start, va_end, MMU_PTE_SHIFT))
+#define IDMAP_PAGES(va_start, va_end) ((PGD_PAGES(va_start, va_end) + PUD_PAGES(va_start, va_end) + PMD_PAGES(va_start, va_end) + PTE_PAGES(va_start, va_end)) * MMU_BLK_SIZE)
+
+
 ENTRY(_entry)
 SECTIONS
 {
         /* Dummy load address */
-        . = 0x10000;
+        /* All we want is a 4k aligned address */
+        . = 0x0000;
         __LOW_MEMORY = .;
         __START = .;
         .text : ALIGN(4096) {
@@ -39,10 +50,21 @@ SECTIONS
         	__BSS_END = .;
         } : data_segment
 
-        . = ALIGN(128);
-        . += 4096;
-        __kernel_init_stack = .;
+
+        .idmap_data : ALIGN(4096) {
+                __IDMAP_DATA_START = .;
+                . += 4096 * 2;
+                __kernel_init_stack = .;
+                __idmap_blocks = .;
+                . += IDMAP_PAGES(__START, __END);
+                __idmap_blocks_end = .;
+                __IDMAP_DATA_END = .;
+        } : data_segment
+
+        . = ALIGN(4096);
         __END = .;
+
+
 }
 
 PHDRS {
