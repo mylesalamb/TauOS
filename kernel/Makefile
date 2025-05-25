@@ -28,12 +28,15 @@ $(foreach module,$(kernel_SUBS),$(eval include $(kernel_SDIR)/$(module)/Makefile
 
 EXEC_BIN := $(kernel_ODIR)/kernel.img
 EXEC_ELF := $(kernel_ODIR)/kernel.elf
-LINK_FLAGS := -T $(kernel_SDIR)/linker.ld
+LINK_FLAGS := -T $(kernel_ODIR)/linker.ld
 
+$(kernel_ODIR)/linker.ld: $(kernel_SDIR)/linker.ld
+	@printf "pp: %-30s => %s\n" "$(patsubst $(ROOTDIR)%,%,$^)" "$(patsubst $(ROOTDIR)%,%,$@)"
+	@$(CC) $(I_FLAGS) -x c $^ -E -o $@
 
-$(EXEC_ELF): $(kernel_COBJS) $(kernel_SOBJS)
+$(EXEC_ELF): $(kernel_COBJS) $(kernel_SOBJS) $(kernel_ODIR)/linker.ld 
 	@printf "ld: %s\n" "$(patsubst $(ROOTDIR)%,%,$@)"
-	@$(CC) $(LINK_FLAGS) -o $@ $(C_FLAGS) $^ $(L_FLAGS)
+	@$(CC) -T $(kernel_ODIR)/linker.ld -o $@ $(C_FLAGS) $(kernel_COBJS) $(kernel_SOBJS) $(L_FLAGS)
 
 $(EXEC_BIN): $(EXEC_ELF)
 	@printf "oc: %-30s => %s\n" "$(patsubst $(ROOTDIR)%,%,$^)" "$(patsubst $(ROOTDIR)%,%,$@)"

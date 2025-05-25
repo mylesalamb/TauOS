@@ -4,6 +4,15 @@ export SCRIPTDIR="$(dirname $0)"
 source "${SCRIPTDIR}"/common
 
 gdb="${SCRIPTDIR}/cross-cc/bin/aarch64-none-elf-gdb"
+objdir="$SCRIPTDIR/../obj"
+gdbscript="$(mktemp)"
+(
+    export kernel="$(find $objdir -name kernel.elf)"
+    export address='0x40080000'
+    envsubst < ${SCRIPTDIR}/gdbscript
+) > "$gdbscript"
 
-# ${SCRIPTDIR}/gdbgui -g "${gdb} -x ${SCRIPTDIR}/gdbscript --symbols=${SCRIPTDIR}/../obj/kernel/kernel.elf"
-${gdb} --tui --command="${SCRIPTDIR}/gdbscript"
+echo "Generated gdbscript:" 1>&2
+cat $gdbscript 1>&2
+
+${gdb} --tui --command="${gdbscript}"

@@ -4,6 +4,7 @@
 #include <printk.h>
 #include <endian.h>
 #include <mm/earlymem.h>
+#include <mm/pt.h>
 
 #define MAX_FDT_CELL_SIZE 2
 
@@ -18,6 +19,9 @@ extern char __DATA_END;
 
 extern char __BSS_START;
 extern char __BSS_END;
+
+extern char __IDMAP_DATA_START;
+extern char __IDMAP_DATA_END;
 
 int platform_early_scan_memory(const struct fdt_header *h);
 int platform_early_scan_chosen(const struct fdt_header *h);
@@ -47,7 +51,8 @@ int platform_early_scan(const struct fdt_header *h)
 /**
     platform_early_scan_memory:
 
-
+	initialize the memory mapping of the kernel, bbootstraping
+	the earlymem memory manager
 */
 int platform_early_scan_memory(const struct fdt_header *h)
 {
@@ -105,16 +110,20 @@ int platform_early_scan_memory(const struct fdt_header *h)
 	}
 
 	earlymem_add_used((uintptr_t) & __TEXT_START,
-			  (uintptr_t) & __TEXT_END -
-			  (uintptr_t) & __TEXT_START);
+			  MMU_GRANULE_ALIGN((uintptr_t) & __TEXT_END -
+					    (uintptr_t) & __TEXT_START));
 	earlymem_add_used((uintptr_t) & __RODATA_START,
-			  (uintptr_t) & __RODATA_END -
-			  (uintptr_t) & __RODATA_START);
+			  MMU_GRANULE_ALIGN((uintptr_t) & __RODATA_END -
+					    (uintptr_t) & __RODATA_START));
 	earlymem_add_used((uintptr_t) & __DATA_START,
-			  (uintptr_t) & __DATA_END -
-			  (uintptr_t) & __DATA_START);
+			  MMU_GRANULE_ALIGN((uintptr_t) & __DATA_END -
+					    (uintptr_t) & __DATA_START));
 	earlymem_add_used((uintptr_t) & __BSS_START,
-			  (uintptr_t) & __BSS_END - (uintptr_t) & __BSS_START);
+			  MMU_GRANULE_ALIGN((uintptr_t) & __BSS_END -
+					    (uintptr_t) & __BSS_START));
+	earlymem_add_used((uintptr_t) & __IDMAP_DATA_START,
+			  MMU_GRANULE_ALIGN((uintptr_t) & __IDMAP_DATA_END -
+					    (uintptr_t) & __IDMAP_DATA_START));
 
 	return 0;
 }
@@ -159,7 +168,7 @@ int platform_early_scan_chosen(const struct fdt_header *h)
 	if (retval < 0)
 		return 0;
 
-	earlymem_add_used(start, end - start);
+	earlymem_add_used(start, MMU_GRANULE_ALIGN(end - start));
 
 	return 0;
 }
