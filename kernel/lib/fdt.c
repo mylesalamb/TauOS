@@ -124,6 +124,9 @@ static int _fdt_get_next_tag(const struct fdt_header *h, uint o, uint *n)
 	case FDT_END:
 		return -FDT_E_NOTAG;
 		break;
+	default:
+		printk("Bad tag value %d\n", t);
+		return -FDT_E_NOTAG;
 	}
 
 	o = FDT_TAG_ALIGN(o);
@@ -182,7 +185,9 @@ int fdt_nodeparent(const struct fdt_header *h, const uint offset, uint *parent)
 		return -FDT_E_NONODE;
 
 	cd = fdt_node_depth(h, offset);
-
+	r = 0;
+	c = 0;
+	d = 0;
 	while (r >= 0 && offset > c) {
 		t = beth32((u32 *) _fdt_offset_ptr(h, c));
 

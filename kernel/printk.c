@@ -11,8 +11,8 @@
 #define _PRINT_CAPS_CHAR    (1<<5)
 #define _PRINT_ZERO_PAD     (1<<6)
 
-/* Some function to call when there are calls to printk */
 static void (*_writes)(const char *);
+static int _writes_init = 0;
 
 /* Basic functions for printk parsing */
 static inline bool is_digit(char c)
@@ -95,6 +95,7 @@ char *ntos(char *dest, long num, int base, int width, unsigned int flags)
 void register_console(void (*fn)(const char *s))
 {
 	_writes = fn;
+	_writes_init = 1;
 }
 
 int vsprintf(char *d, const char *fmt, va_list va)
@@ -198,6 +199,10 @@ int printk(const char *fmt, ...)
 {
 	int retval;
 	char b[256] = { 0 };
+
+	if (!_writes_init)
+		return 0;
+
 	va_list va;
 	va_start(va, fmt);
 	retval = vsprintf(b, fmt, va);

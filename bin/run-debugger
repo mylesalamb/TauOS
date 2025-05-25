@@ -2,8 +2,27 @@
 
 export SCRIPTDIR="$(dirname $0)"
 source "${SCRIPTDIR}"/common
+virt=n
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -v|--virt)
+            virt=y; shift;;
+        *)
+            echo "Bad argument" 1>&2
+            break;;
+    esac
+done
 
 gdb="${SCRIPTDIR}/cross-cc/bin/aarch64-none-elf-gdb"
+objdir="$SCRIPTDIR/../obj"
+gdbscript="$(mktemp)"
+(
+    export kernel="$(find $objdir -name kernel.elf)"
+    export address='0x40080000'
+    if [ "$virt" == "y" ]; then
+        address=$(printf "0x%x\n" $((0xffff000000000000 | address)))
+    fi
+    envsubst < ${SCRIPTDIR}/gdbscript
+) > "$gdbscript"
 
-# ${SCRIPTDIR}/gdbgui -g "${gdb} -x ${SCRIPTDIR}/gdbscript --symbols=${SCRIPTDIR}/../obj/kernel/kernel.elf"
-${gdb} --tui --command="${SCRIPTDIR}/gdbscript"
+${gdb} --tui --command="${gdbscript}"

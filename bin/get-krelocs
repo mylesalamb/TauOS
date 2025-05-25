@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Helper to read .rela information from kernel.elf
+export SCRIPTDIR="$(dirname $0)"
+source "${SCRIPTDIR}"/common
+
+readelf="${SCRIPTDIR}/cross-cc/bin/aarch64-none-elf-readelf"
+objdir="$SCRIPTDIR/../obj"
+
+$readelf $objdir/kernel/kernel.elf --relocs

@@ -1,5 +1,5 @@
-
 target remote localhost:1234
-layout asm
 layout split
+layout src
 layout regs
+add-symbol-file ${kernel} ${address}
