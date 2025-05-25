@@ -10,3 +10,14 @@ void *memset(void *dest, int c, size_t s)
 
 	return dest;
 }
+
+void *memmove(void *dest, void *src, size_t n)
+{
+	unsigned char *d = dest;
+	unsigned char *s = src;
+
+	while (n--)
+		*d++ = *s++;
+
+	return dest;
+}
