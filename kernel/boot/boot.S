@@ -230,6 +230,11 @@ bss_setup:
     blr x1
 
     /* Higher half mappings are now usable */
+    ldr x0, =KVADDR_BASE
+    adr x1, __kernel_init_stack
+    orr x0, x0, x1
+    mov sp, x0
+
     mov x0, x23
     ldr x1, =kstart
     br x1

@@ -2,7 +2,7 @@
 #define FDT_H 1
 
 #include <types.h>
-#include <error.h>
+#include <errtab.h>
 
 /* Max size of FDT, probably unrealistic */
 #define FDT_MAX_SIZE			(1UL << 20)

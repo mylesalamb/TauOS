@@ -96,8 +96,8 @@ int _earlymem_push(struct early_memory_container *c, size_t m, uintptr_t b,
 		/* Is the current entry bigger */
 		if (c->regions[i].base > b) {
 			/* Shove it forward */
-			memmove(&c->regions + i + 1, &c->regions + i,
-				sizeof(c->regions[0]) * c->idx - i);
+			memmove((c->regions) + i + 1, (c->regions) + i,
+				sizeof(c->regions[0]) * (c->idx - i));
 			break;
 		}
 

@@ -206,8 +206,11 @@ int _mmu_push_block(pg_table *entry, unsigned int shift,
 		return r;
 
 	dest = (uintptr_t) entry_to_table(*entry);
+	printk("Extracted dest to push down to %x\n", dest);
 	for (int i = 0; i < MMU_BLK_LEN; i++) {
-		fwd[i] = flags | dest;
+		fwd[i] =
+		    flags | dest | ((shift == MMU_PTE_SHIFT) ? (MMU_DCR_PAGE)
+				    : (MMU_DCR_BLOCK));
 		dest += step;
 	}
 
@@ -328,6 +331,7 @@ int _mmu_map_range(pg_table *pgd, void *const s, const size_t l,
 		}
 
 		/* Push the block mapping down */
+		printk("Pushing down block map %x to pte\n", *e);
 		r = _mmu_push_block(e, MMU_PTE_SHIFT, alloc);
 		if (r < 0)
 			return r;
