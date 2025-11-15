@@ -1,3 +1,3 @@
-$(eval $(call MODULE_template,march))
+$(eval $(call MODULE_template,boot))
 
-kernel_SOBJS += $(march_SOBJS)
+kernel_SOBJS += $(boot_SOBJS)

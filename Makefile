@@ -31,7 +31,11 @@ initrd:
 	$(MAKE) -C $(CURDIR)/$@/ $@
 
 run:
-	$(QEMU) -machine virt -m 256M -kernel $(OBJDIR)kernel/kernel.img -cpu cortex-a53 -nographic -initrd $(OBJDIR)initrd/initrd.tar -append foo=bar
+	$(QEMU) -machine virt,gic-version=2 -m 256M \
+		-kernel $(OBJDIR)kernel/kernel.img \
+		-cpu cortex-a53 -nographic \
+		-initrd $(OBJDIR)initrd/initrd.tar \
+		-append 'intc=intc,intc-gicv2.kmod timer=timer,timer-generic.kmod'
 debug:
 	$(QEMU) -s -S -machine virt -m 256M -kernel $(OBJDIR)kernel/kernel.img -cpu cortex-a53 -nographic -initrd $(OBJDIR)initrd/initrd.tar
 

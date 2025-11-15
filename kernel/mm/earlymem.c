@@ -48,6 +48,12 @@ void earlymem_used_len(size_t *l)
 	return;
 }
 
+void earlymem_available_len(size_t *l)
+{
+	_earlymem_len(&available, l);
+	return;
+}
+
 int earlymem_source_ent(const size_t l, uintptr_t *b, size_t *s, int *f)
 {
 	return _earlymem_ent(&source, l, b, s, f);
@@ -56,6 +62,11 @@ int earlymem_source_ent(const size_t l, uintptr_t *b, size_t *s, int *f)
 int earlymem_used_ent(const size_t l, uintptr_t *b, size_t *s, int *f)
 {
 	return _earlymem_ent(&used, l, b, s, f);
+}
+
+int earlymem_available_ent(const size_t l, uintptr_t *b, size_t *s, int *f)
+{
+	return _earlymem_ent(&available, l, b, s, f);
 }
 
 /**
@@ -96,8 +107,8 @@ int _earlymem_push(struct early_memory_container *c, size_t m, uintptr_t b,
 		/* Is the current entry bigger */
 		if (c->regions[i].base > b) {
 			/* Shove it forward */
-			memmove(&c->regions + i + 1, &c->regions + i,
-				sizeof(c->regions[0]) * c->idx - i);
+			memmove((c->regions) + i + 1, (c->regions) + i,
+				sizeof(c->regions[0]) * (c->idx - i));
 			break;
 		}
 

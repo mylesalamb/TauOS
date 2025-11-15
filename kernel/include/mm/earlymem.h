@@ -17,8 +17,10 @@ int earlymem_alloc(size_t, size_t, void **);
 
 void earlymem_source_len(size_t *);
 void earlymem_used_len(size_t *);
+void earlymem_available_len(size_t *);
 
 int earlymem_used_ent(size_t, uintptr_t *, size_t *, int *);
 int earlymem_source_ent(size_t, uintptr_t *, size_t *, int *);
+int earlymem_available_ent(size_t, uintptr_t *, size_t *, int *);
 
 #endif
