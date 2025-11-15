@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Helper to read .rela information from kernel.elf
+# Helper to read kernel.elf sections for debugging
 export SCRIPTDIR="$(dirname $0)"
 source "${SCRIPTDIR}"/common
 

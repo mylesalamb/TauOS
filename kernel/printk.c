@@ -67,9 +67,10 @@ char *ntos(char *dest, long num, int base, int width, unsigned int flags)
 	if (num == 0) {
 		t[i++] = '0';
 	} else {
-		while (num > 0) {
-			t[i++] = digits[num % base];
-			num /= base;
+		unsigned long _num = (unsigned long)num;
+		while (_num > 0) {
+			t[i++] = digits[_num % base];
+			_num /= base;
 		}
 	}
 	if (flags & _PRINT_HEX_PREFIX) {

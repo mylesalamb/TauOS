@@ -43,15 +43,15 @@ size_t strlen(const char *s)
 */
 int strncmp(const char *a, const char *b, size_t l)
 {
+
 	while (l && *a && (*b == *a)) {
 		a++;
 		b++;
 		l--;
 	}
 
-	if (l == 0) {
+	if (!l)
 		return 0;
-	}
 
 	return (unsigned char)*a - (unsigned char)*b;
 }
