@@ -13,7 +13,7 @@ SECTIONS
 {
         /* Dummy load address */
         /* All we want is a 4k aligned address */
-        . = 0x0000;
+        . = 0x1000;
         __LOW_MEMORY = .;
         __START = .;
         .text : ALIGN(4096) {

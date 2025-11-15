@@ -2,10 +2,10 @@
 #define FDT_H 1
 
 #include <types.h>
-#include <error.h>
+#include <errtab.h>
 
 /* Max size of FDT, probably unrealistic */
-#define FDT_MAX_SIZE			(1UL << 20)
+#define FDT_MAX_SIZE			(1UL << 21)
 
 #define FDT_HEADER_MAGIC        0xD00DFEED
 #define FDT_BEGIN_NODE          0x00000001

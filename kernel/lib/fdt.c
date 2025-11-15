@@ -2,7 +2,7 @@
 #include <stddef.h>
 
 #include <endian.h>
-#include <error.h>
+#include <errtab.h>
 #include <printk.h>
 #include <lib/fdt.h>
 #include <lib/string.h>

@@ -11,7 +11,8 @@ I_FLAGS = -I$(kernel_SDIR)/include
 C_FLAGS = -Wall -ffreestanding -nostdlib \
 			-nostartfiles -mgeneral-regs-only \
 			-g -pie -DGIT_COMMIT_HASH=\"$(GIT_COMMIT)$(GIT_DIRTY)\" \
-			-DKERNEL_VERSION=\"$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)\"
+			-DKERNEL_VERSION=\"$(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)\" \
+			-fmacro-prefix-map=$(kernel_SDIR)/=
 L_FLAGS = -lgcc
 
 .PHONY: kernel

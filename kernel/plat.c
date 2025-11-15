@@ -3,7 +3,9 @@
 #include <lib/fdt.h>
 #include <printk.h>
 #include <endian.h>
+#include <pl011.h>
 #include <mm/mmu.h>
+#include <mm/addr.h>
 #include <mm/earlymem.h>
 #include <mm/pt.h>
 #include <lib/mem.h>
@@ -28,10 +30,14 @@ extern char __IDMAP_DATA_END;
 extern pg_table __idmap_blocks;
 
 char *cmdline;
-char cmdline_present;
 
 void *initrd;
 size_t initrd_size;
+
+int cmdline_present = 0;
+int initrd_present = 0;
+
+pg_table *ktable;
 
 int plat_early_scan_memory(const struct fdt_header *h);
 int plat_early_scan_chosen(const struct fdt_header *h);
@@ -305,5 +311,60 @@ int plat_init_logical()
 
 	asm volatile ("msr ttbr1_el1, %0; isb"::"r" ((uintptr_t) pgd)
 	    );
+
+	ktable = pgd;
+	return 0;
+}
+
+/**
+	Writes the address of the kernel commandline supplied by
+	the devicetree.
+
+	Returns 0, if the commandline is present and <0 otherwise
+*/
+int plat_get_cmdline(char **d)
+{
+	if (!cmdline_present)
+		return -1;
+
+	*d = cmdline;
+	return 0;
+}
+
+void plat_get_ktable(pg_table **d)
+{
+	*d = ktable;
+}
+
+int plat_get_initrd(void **d, size_t *l)
+{
+	if (!initrd_present)
+		return -1;
+
+	*d = initrd;
+	*l = initrd_size;
+	return 0;
+}
+
+/**
+    Initialises the output stream of the kernel so that
+    printk will start printing things, this should really
+    recieve some direction from the bootargs
+*/
+int plat_init_io()
+{
+	int r;
+	pg_table *k;
+	void *uart_addr = (void *)0x09000000;
+
+	plat_get_ktable(&k);
+
+	r = mmu_map_range(k, uart_addr, 0x1000, MMU_MAP_DEVICE,
+			  _plat_init_alloc);
+	if (r < 0)
+		return r;
+
+	pl011_init(va(uart_addr));
+	register_console(pl011_puts);
 	return 0;
 }
