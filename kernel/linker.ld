@@ -13,7 +13,7 @@ SECTIONS
 {
         /* Dummy load address */
         /* All we want is a 4k aligned address */
-        . = 0x0000;
+        . = 0x1000;
         __LOW_MEMORY = .;
         __START = .;
         .text : ALIGN(4096) {
@@ -41,6 +41,10 @@ SECTIONS
         {
         	__DATA_START = .;
                 *(.data)
+                . = ALIGN(8);
+                __DATA_SYMBOLS_START = .;
+                KEEP(*(.data.symbols))
+                __DATA_SYMBOLS_END = .;
         	__DATA_END = .;
         } : data_segment
         .bss : ALIGN(4096)

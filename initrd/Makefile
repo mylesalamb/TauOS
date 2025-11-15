@@ -10,7 +10,7 @@ $(eval $(call RULES_template,$(kernel_SDIR),$(kernel_ODIR)))
 INITRD_TAR := $(initrd_ODIR)/initrd.tar
 
 $(INITRD_TAR): $(initrd_SDIR)/img | $(initrd_ODIR)
-	tar -cf $@ -C $^ .
+	tar --format=ustar -cf $@ -C $^ .
 
 $(initrd_ODIR):
 	mkdir -p $@

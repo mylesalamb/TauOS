@@ -1,21 +1,12 @@
 #include <tau.h>
-#include <pl011.h>
+#include <exc.h>
+#include <mod.h>
+#include <error.h>
 #include <printk.h>
-#include <lib/fdt.h>
 #include <plat.h>
-#include <mm/mmu.h>
-
-extern pg_table __idmap_blocks;
-extern pg_table __idmap_blocks_end;
-extern char __START, __END;
-
-void __attribute__((noreturn))panic(const char *msg)
-{
-	/* No error reporting yet so just hang in a known place */
-	printk("[panic]: %s\n", msg);
-	while (1)
-		asm volatile ("nop");
-}
+#include <mm/palloc.h>
+#include <mm/memmap.h>
+#include <lib/fdt.h>
 
 /**
 	Early kernel initialisation routine
@@ -31,7 +22,6 @@ void kinit(struct fdt_header *dtb)
 {
 
 	int r;
-
 	/* Need early io to print this, maybe add linux like earlycon */
 	printk("Booting TauOSv%s commit:%s\n", KERNEL_VERSION, GIT_COMMIT_HASH);
 
@@ -49,8 +39,30 @@ void kinit(struct fdt_header *dtb)
 }
 
 /* Main kernel entrypoint executed under 0xfff... addresses*/
-void kstart(struct fdt_header *dtb)
+void __attribute__((noreturn))kstart(struct fdt_header *dtb)
 {
-	while (1)
-		asm volatile ("nop");
+	int r;
+	exc_init();
+
+	r = plat_init_io();
+	if (r < 0) {
+		panic("plat_init_io failed!");
+	}
+	r = memmap_init();
+	if (r < 0) {
+		panic("memmap_init failed!");
+	}
+
+	r = palloc_init();
+	if (r < 0) {
+		panic("palloc_init failed!");
+	}
+
+	r = plat_init_mods();
+	if (r < 0) {
+		panic("plat_init_mods failed!");
+	}
+
+	mod_get_exported("printk", (void **)NULL);
+	panic("kstart tried to return");
 }

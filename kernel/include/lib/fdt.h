@@ -2,10 +2,10 @@
 #define FDT_H 1
 
 #include <types.h>
-#include <error.h>
+#include <errtab.h>
 
 /* Max size of FDT, probably unrealistic */
-#define FDT_MAX_SIZE			(1UL << 20)
+#define FDT_MAX_SIZE			(1UL << 21)
 
 #define FDT_HEADER_MAGIC        0xD00DFEED
 #define FDT_BEGIN_NODE          0x00000001
@@ -34,10 +34,6 @@ struct fdt_header {
 	u32 boot_cpuid;
 	u32 string_size;
 	u32 struct_size;
-};
-
-struct fdt_token {
-	u32 type;
 };
 
 struct fdt_prop {

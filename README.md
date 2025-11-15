@@ -10,7 +10,32 @@ In terms of architecture, although early. I intend to build the system as a hybr
 * Uses Linux Kernel Boot Protocol
 * Runtime kernel address patching (KASLR without the 'R')
 * Rudimentary device tree parsing
+* Higher-half kernel logical map derived from advertised memory in the device tree
 * And a trivial PL011 UART driver ;)
+
+## Building
+
+Install the cross compiler toolchain and qemu with...
+
+```sh
+./bin/get-toolchain
+
+# For RHEL derived distros
+sudo dnf install qemu-system-aarch64
+```
+
+Build the kernel with...
+
+```sh
+make
+```
+
+Run the kernel with
+
+```sh
+make run
+```
+
 
 ## Other
 
