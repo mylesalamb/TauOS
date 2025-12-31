@@ -2,8 +2,8 @@
 #define MOD 1
 
 struct exported_symbol {
-    const char *name;
-    void *addr;
+	const char *name;
+	void *addr;
 };
 
 #define EXPORT(fn) \
