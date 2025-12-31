@@ -9,6 +9,9 @@
 #include <mm/addr.h>
 #include <mm/earlymem.h>
 #include <mm/pt.h>
+#include <mm/palloc.h>
+#include <mm/memmap.h>
+#include <mm/kmalloc.h>
 #include <lib/mem.h>
 
 #define MAX_FDT_CELL_SIZE 2
@@ -368,6 +371,33 @@ int plat_init_io()
 
 	pl011_init(va(uart_addr));
 	register_console(pl011_puts);
+	return 0;
+}
+
+/**
+	plat_init_mm:
+
+	Initialise the memory management subsystem of the kernel
+*/
+int plat_init_mm()
+{
+	int r;
+
+	r = memmap_init();
+	if (r < 0) {
+		return r;
+	}
+
+	r = palloc_init();
+	if (r < 0) {
+		return r;
+	}
+
+	r = kmalloc_init();
+	if (r < 0) {
+		return r;
+	}
+
 	return 0;
 }
 

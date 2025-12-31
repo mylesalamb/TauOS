@@ -7,6 +7,7 @@
 int plat_early_scan(const struct fdt_header *);
 int plat_init_logical();
 int plat_init_io();
+int plat_init_mm();
 int plat_init_mods();
 
 int plat_get_cmdline(char **);

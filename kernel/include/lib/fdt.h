@@ -1,5 +1,5 @@
-#ifndef FDT_H
-#define FDT_H 1
+#ifndef LIB_FDT_H
+#define LIB_FDT_H 1
 
 #include <types.h>
 #include <errtab.h>

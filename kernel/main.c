@@ -1,11 +1,8 @@
 #include <tau.h>
 #include <exc.h>
-#include <mod.h>
 #include <error.h>
 #include <printk.h>
 #include <plat.h>
-#include <mm/palloc.h>
-#include <mm/memmap.h>
 #include <lib/fdt.h>
 
 /**
@@ -48,14 +45,10 @@ void __attribute__((noreturn))kstart(struct fdt_header *dtb)
 	if (r < 0) {
 		panic("plat_init_io failed!");
 	}
-	r = memmap_init();
+	
+	r = plat_init_mm();
 	if (r < 0) {
-		panic("memmap_init failed!");
-	}
-
-	r = palloc_init();
-	if (r < 0) {
-		panic("palloc_init failed!");
+		panic("plat_init_mm failed!");
 	}
 
 	r = plat_init_mods();
@@ -63,6 +56,5 @@ void __attribute__((noreturn))kstart(struct fdt_header *dtb)
 		panic("plat_init_mods failed!");
 	}
 
-	mod_get_exported("printk", (void **)NULL);
 	panic("kstart tried to return");
 }

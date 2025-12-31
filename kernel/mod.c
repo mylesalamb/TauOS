@@ -20,19 +20,19 @@ extern const struct exported_symbol __DATA_SYMBOLS_END[];
 int mod_get_exported(const char *name, void **dest)
 {
 
-    size_t count = __DATA_SYMBOLS_END - __DATA_SYMBOLS_START;
-    printk("Have %d symbols exported\n", count);
+	size_t count = __DATA_SYMBOLS_END - __DATA_SYMBOLS_START;
+	printk("Have %d symbols exported\n", count);
 
-    for(size_t i = 0; i < count; i++)
-    {
-        printk("Checking symbol %s (%p)\n", __DATA_SYMBOLS_START[i].name, __DATA_SYMBOLS_START[i].addr);
-        if(!strcmp(name, __DATA_SYMBOLS_START[i].name))
-        {
-            printk("Found symbol: %s\n", name);
-            *dest = __DATA_SYMBOLS_START[i].addr;
-            return 0;
-        }
-    }
-    printk("Did not find symbol for name: %s\n", name);
-    return -1;
+	for (size_t i = 0; i < count; i++) {
+		printk("Checking symbol %s (%p)\n",
+		       __DATA_SYMBOLS_START[i].name,
+		       __DATA_SYMBOLS_START[i].addr);
+		if (!strcmp(name, __DATA_SYMBOLS_START[i].name)) {
+			printk("Found symbol: %s\n", name);
+			*dest = __DATA_SYMBOLS_START[i].addr;
+			return 0;
+		}
+	}
+	printk("Did not find symbol for name: %s\n", name);
+	return -1;
 }

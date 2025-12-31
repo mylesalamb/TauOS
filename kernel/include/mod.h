@@ -1,9 +1,9 @@
-#ifndef MOD
-#define MOD 1
+#ifndef MOD_H
+#define MOD_H 1
 
 struct exported_symbol {
-    const char *name;
-    void *addr;
+	const char *name;
+	void *addr;
 };
 
 #define EXPORT(fn) \
