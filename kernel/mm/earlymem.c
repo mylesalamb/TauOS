@@ -1,8 +1,11 @@
 #include <types.h>
+#include <trace.h>
 #include <stddef.h>
 #include <printk.h>
 #include <lib/mem.h>
 #include <mm/earlymem.h>
+
+#define trace(...) _trace(CONFIG_TRACE_MM_EARLYMEM, __VA_ARGS__)
 #define BYTE_ALIGN(a, x)    (((x) + (a) - 1) & ~((a) - 1))
 #define EARLY_MEM_MAX_BLOCKS 32
 
@@ -181,8 +184,7 @@ int _earlymem_reclaim(struct early_memory_container *c, size_t m, uintptr_t b,
 int earlymem_add_avail(uintptr_t b, size_t s)
 {
 	int r;
-	printk("advertise memory: %d [%#0lx, %#0lx)\n", available.idx, b,
-	       b + s);
+	trace("advertise memory: %d [%#0lx, %#0lx)\n", available.idx, b, b + s);
 	r = _earlymem_push(&source, EARLY_MEM_MAX_BLOCKS, b, s, 0);
 	if (r < 0)
 		return r;
@@ -193,7 +195,7 @@ int earlymem_add_avail(uintptr_t b, size_t s)
 int earlymem_add_used(uintptr_t b, size_t s, int f)
 {
 	int r;
-	printk("reserve memory: %d [%#0lx, %#0lx)\n", used.idx, b, b + s);
+	trace("reserve memory: %d [%#0lx, %#0lx)\n", used.idx, b, b + s);
 
 	r = _earlymem_reclaim(&available, EARLY_MEM_MAX_BLOCKS, b, s);
 
@@ -217,13 +219,13 @@ int earlymem_alloc(size_t l, size_t a, void **d)
 
 	u64 b;
 
-	printk("Start try alloc\n");
+	trace("Start try alloc\n");
 
 	while (c < available.idx) {
 		region = &available.regions[c++];
 
-		printk("Checking region [%lx, %lx)\n", region->base,
-		       region->base + region->size);
+		trace("Checking region [%lx, %lx)\n", region->base,
+		      region->base + region->size);
 
 		b = BYTE_ALIGN(a, region->base);
 
@@ -239,7 +241,7 @@ int earlymem_alloc(size_t l, size_t a, void **d)
 		if (r < 0)
 			return r;
 
-		printk("Found region for use: %lx\n", b);
+		trace("Found region for use: %lx\n", b);
 		*d = (void *)b;
 		return 0;
 

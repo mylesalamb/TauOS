@@ -34,6 +34,10 @@ sudo dnf install qemu-system-aarch64 libguestfs
 Build the kernel with...
 
 ```sh
+# Generate the kernel compile time configuration for qemuvirt
+make qemuvirt_config
+
+# Build the kernel
 make
 ```
 

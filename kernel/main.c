@@ -20,7 +20,6 @@ void kinit(struct fdt_header *dtb)
 
 	int r;
 	/* Need early io to print this, maybe add linux like earlycon */
-	printk("Booting TauOSv%s commit:%s\n", KERNEL_VERSION, GIT_COMMIT_HASH);
 
 	/* Work out what memory is available */
 	r = plat_early_scan(dtb);
@@ -45,7 +44,8 @@ void __attribute__((noreturn))kstart(struct fdt_header *dtb)
 	if (r < 0) {
 		panic("plat_init_io failed!");
 	}
-	
+
+	printk("Booting TauOSv%s commit:%s\n", KERNEL_VERSION, GIT_COMMIT_HASH);
 	r = plat_init_mm();
 	if (r < 0) {
 		panic("plat_init_mm failed!");

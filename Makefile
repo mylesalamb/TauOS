@@ -22,6 +22,31 @@ export QEMU			:= /usr/bin/qemu-system-aarch64
 
 all: kernel modules initrd
 
+### Config directives
+
+CONFIG_TOOL := $(ROOTDIR)/bin/conftool
+CONFIG_ROOT := $(ROOTDIR)/config
+CONFIG_OBJ := $(OBJDIR)/config
+CONFIG_HEADER := $(CONFIG_OBJ)/config.h
+
+$(CONFIG_OBJ):
+	@mkdir -p $@
+
+%_config: $(CONFIG_ROOT)/% | $(CONFIG_OBJ)
+	@cfg=$*; \
+	echo "Configuring $$cfg..."; \
+	$(CONFIG_TOOL) -c $(CONFIG_ROOT)/defconfig $(CONFIG_ROOT)/$$cfg -o ${CONFIG_OBJ}
+	@find $(CONFIG_OBJ) -type f
+
+$(CONFIG_ROOT)/%:
+	@echo "Error: config variant does not exist"
+	@false
+
+$(CONFIG_HEADER): | $(CONFIG_OBJ)
+	@echo "Error: no configuration selected"
+	@echo "Run 'make <name>_config'"
+	@false
+
 ### Kernel Directives
 
 KERNEL_ROOT := $(ROOTDIR)/kernel
@@ -78,8 +103,8 @@ $(KERNEL_DST):
 $(KERNEL_LDOBJ): $(KERNEL_LDSRC)
 	$(CC) -I $(KERNEL_ROOT)/include -x c $^ -E -o $@
 
-$(KERNEL_OBJ)/%.c.o: $(KERNEL_ROOT)/%.c | $(KERNEL_OBJDIRS)
-	$(CC) $(KERNEL_CFLAGS) -I $(KERNEL_ROOT)/include -c $< -o $@ $(KERNEL_LFLAGS)
+$(KERNEL_OBJ)/%.c.o: $(KERNEL_ROOT)/%.c $(CONFIG_HEADER) | $(KERNEL_OBJDIRS)
+	$(CC) $(KERNEL_CFLAGS) -I $(KERNEL_ROOT)/include -include $(CONFIG_HEADER) -c $< -o $@ $(KERNEL_LFLAGS)
 
 $(KERNEL_OBJ)/%.S.o: $(KERNEL_ROOT)/%.S | $(KERNEL_OBJDIRS)
 	$(CC) $(KERNEL_CFLAGS) -I $(KERNEL_ROOT)/include -c $< -o $@
@@ -177,13 +202,13 @@ initrd: $(INITRD_IMG)
 ### Run commands, `make debug` specifically for attaching GDB debug proc
 
 run:
-	$(QEMU) -machine virt,gic-version=2 -m 256M \
+	@$(QEMU) -machine virt,gic-version=2 -m 256M \
 		-kernel $(KERNEL_DST)/kernel.img \
 		-cpu cortex-a53 -nographic \
 		-initrd $(INITRD_IMG) \
 		-append 'intc=intc,intc-gicv2.kmod timer=timer,timer-arm-generic.kmod'
 debug:
-	$(QEMU) -s -S -machine virt,gic-version=2 -m 256M \
+	@$(QEMU) -s -S -machine virt,gic-version=2 -m 256M \
 		-kernel $(KERNEL_DST)/kernel.img \
 		-cpu cortex-a53 -nographic \
 		-initrd $(INITRD_IMG) \
@@ -192,9 +217,12 @@ debug:
 
 ### Generic rules
 clean:
-	rm -rf $(OBJDIR)
+	rm -rf $(OBJDIR)/kernel $(OBJDIR)/modules
 	rm -rf $(DSTDIR)
 	$(FIND) $(ROOTDIR) -name '*.[c,h]~' -exec rm {} \;
+
+cleanall: clean
+	rm -rf $(OBJDIR)
 
 lint:
 	$(FIND) $(ROOTDIR)/kernel -name '*.[c,h]' | $(XARGS) $(INDENT) \

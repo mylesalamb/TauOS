@@ -1,11 +1,14 @@
 #include <stddef.h>
 #include <printk.h>
+#include <trace.h>
 #include <types.h>
 #include <mm/pt.h>
 #include <mm/addr.h>
 #include <mm/palloc.h>
 #include <mm/memmap.h>
 #include <mm/earlymem.h>
+
+#define trace(...) _trace(CONFIG_TRACE_MM_BUDDY, __VA_ARGS__)
 
 /* Bits to shift by from order to extent */
 #define PALLOC_ORD_SHIFT (12)
@@ -78,19 +81,19 @@ int _palloc_insert(struct page *p)
 		while (cur) {
 			if (_palloc_is_buddy(cur, p, p->order)) {
 
-				*prev = cur->next;
+				*prev = cur->ctx.next;
 
 				if (cur < p)
 					p = cur;
 
 				p->order++;
-				p->next = NULL;
+				p->ctx.next = NULL;
 
 				goto try_next_order;
 			}
 
-			prev = &cur->next;
-			cur = cur->next;
+			prev = &cur->ctx.next;
+			cur = cur->ctx.next;
 		}
 
 		break;
@@ -100,9 +103,9 @@ int _palloc_insert(struct page *p)
 
 	struct page **csr = &avail_blocks[p->order];
 	while (*csr && *csr < p)
-		csr = &(*csr)->next;
+		csr = &(*csr)->ctx.next;
 
-	p->next = *csr;
+	p->ctx.next = *csr;
 	*csr = p;
 
 	return 0;
@@ -121,8 +124,8 @@ int _palloc_push_avail(uintptr_t base, size_t s, size_t *c)
 	uint addr_ord = max_ord(base);
 	uint ext_ord = extent_to_ord(base);
 
-	printk("address: %x, extent: %x\n", base, s);
-	printk("address order: %d, extent order: %d\n", addr_ord, ext_ord);
+	trace("address: %x, extent: %x\n", base, s);
+	trace("address order: %d, extent order: %d\n", addr_ord, ext_ord);
 
 	ord = (addr_ord > ext_ord) ? ext_ord : addr_ord;
 
@@ -130,7 +133,7 @@ int _palloc_push_avail(uintptr_t base, size_t s, size_t *c)
 	if (ord >= _PALLOC_LIMIT)
 		ord = _PALLOC_LIMIT - 1;
 
-	printk("Pushing block of size: %d (%x), order %d\n", *c, *c, ord);
+	trace("Pushing block of size: %d (%x), order %d\n", *c, *c, ord);
 	p = memmap_paddr((void *)base);
 	p->order = ord;
 	r = _palloc_insert(p);
@@ -215,7 +218,7 @@ void palloc_dump(void)
 
 			printk("\n");
 
-			p = p->next;
+			p = p->ctx.next;
 		}
 	}
 }
@@ -239,8 +242,8 @@ int palloc(void **d, uint o)
 
 	/* Remove block from free list */
 	p = avail_blocks[order];
-	avail_blocks[order] = p->next;
-	p->next = NULL;
+	avail_blocks[order] = p->ctx.next;
+	p->ctx.next = NULL;
 
 	/* Split down to requested order */
 	while (order > o) {
@@ -250,7 +253,7 @@ int palloc(void **d, uint o)
 		_palloc_split(p, &buddy, order);
 
 		buddy->order = order;
-		buddy->next = NULL;
+		buddy->ctx.next = NULL;
 
 		_palloc_insert(buddy);
 

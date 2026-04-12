@@ -3,16 +3,20 @@
 
 #include <types.h>
 #include <mm/memmap.h>
+#include <mm/kmalloc.h>
+
 #define MEMMAPF_UNK         (0)	/* Unknown, memory hole / fw reserved */
-#define MEMMAPF_FREE        (1 << 0)	/* Available for allocation */
-#define MEMMAPF_KRES        (1 << 1)	/* Used by the kernel */
+#define MEMMAPF_FREE        (1)	/* Available for allocation, managed under page allocator */
+#define MEMMAPF_KRES        (2)	/* Reserved as part of the kernels residency */
+#define MEMMAPF_DYN			(3)	/* Memory is managed under the kernels dynamic allocator */
 
 struct page {
 	uint flags;
-
-	/* When flags = MEMMAPF_FREE */
-	struct page *next;
 	uint order;
+	union {
+		struct page *next;
+		struct slabctl *slab;
+	} ctx;
 };
 
 int memmap_init();

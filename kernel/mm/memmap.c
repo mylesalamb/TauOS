@@ -1,11 +1,14 @@
 #include <types.h>
 #include <printk.h>
+#include <trace.h>
 #include <stddef.h>
 #include <lib/mem.h>
 #include <mm/pt.h>
 #include <mm/addr.h>
 #include <mm/memmap.h>
 #include <mm/earlymem.h>
+
+#define trace(...) _trace(CONFIG_TRACE_MM_MEMMAP, __VA_ARGS__)
 
 struct page *_memmap_blocks;
 uintptr_t _memmap_block_base;
@@ -75,7 +78,7 @@ void _memmap_mark_range(uintptr_t b, size_t s, uint flags)
 	struct page *csr = memmap_paddr((void *)b);
 	size_t cnt = s / MMU_GRANULE;
 
-	printk("Marking %p + %d with %d\n", csr, cnt, flags);
+	trace("Marking %p + %d with %d\n", csr, cnt, flags);
 
 	for (size_t i = 0; i < cnt; i++) {
 		csr[i].flags = flags;
@@ -92,18 +95,18 @@ int _memmap_populate()
 
 	/* For each used entry, mark it as so */
 	earlymem_used_len(&l);
-	printk("Have %d entires to add\n", l);
+	trace("Have %d used entries to add\n", l);
 	for (size_t i = 0; i < l; i++) {
 		earlymem_used_ent(i, &b, &s, &f);
-		printk("Pushing used entry [%lx, %lx)\n", b, s + b);
+		trace("Pushing used entry [%lx, %lx)\n", b, s + b);
 		_memmap_mark_range(b, s, MEMMAPF_KRES);
 	}
 
 	earlymem_available_len(&l);
-	printk("Have %d entires to add\n", l);
+	trace("Have %d entrees to add\n", l);
 	for (size_t i = 0; i < l; i++) {
 		earlymem_available_ent(i, &b, &s, &f);
-		printk("Pushing available entry [%lx, %lx)\n", b, s + b);
+		trace("Pushing available entry [%lx, %lx)\n", b, s + b);
 		_memmap_mark_range(b, s, MEMMAPF_FREE);
 	}
 	return 0;
@@ -134,8 +137,8 @@ int memmap_init()
 	entries = extent / MMU_GRANULE;
 
 	/* Assumption that memory base + limit is 4kb aligned */
-	printk("Memory spans [%lx, %lx], len = %lx\n", low, high, extent);
-	printk("Need %d entries for memmap\n", extent / MMU_GRANULE);
+	trace("Memory spans [%lx, %lx], len = %lx\n", low, high, extent);
+	trace("Need %d entries for memmap\n", extent / MMU_GRANULE);
 
 	r = earlymem_alloc(entries * sizeof(struct page), MMU_GRANULE,
 			   (void **)&_memmap_blocks);
@@ -145,8 +148,6 @@ int memmap_init()
 	_memmap_blocks = (struct page *)va(_memmap_blocks);
 	_memmap_block_len = entries;
 	_memmap_block_base = low;
-
-	printk("memmap rooted at: %p\n", _memmap_blocks);
 
 	memset(_memmap_blocks, 0, entries * sizeof(struct page));
 	r = _memmap_populate();

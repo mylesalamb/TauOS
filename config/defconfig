@@ -1,0 +1,17 @@
+# TauOS Default Configuration
+# INI format - to be transformed into a C header
+
+[trace.mm]
+slab=0
+buddy=0
+earlymem=0
+mmu=0
+memmap=0
+
+[trace.lib]
+tar=0
+fdt=0
+
+[trace]
+plat=0
+elf=0

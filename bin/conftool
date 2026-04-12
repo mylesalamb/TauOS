@@ -1,0 +1,62 @@
+#!/usr/bin/env python3 
+
+import argparse
+import pathlib
+import configparser
+import sys
+
+C_HEADER_NAME = "config.h"
+MAKE_HEADER_NAME = "kernel.config"
+
+def write_c_header(fname, config):
+    
+    with open(fname, "w") as f:
+        f.write("#ifndef CONFIG_H\n")
+        f.write("#define CONFIG_H 1\n\n")
+        f.write(''.join(f"#define {k} {v}\n" for k,v in config.items()))
+        f.write("#endif\n")
+
+def write_make_config(fname, config):
+
+    with open(fname, "w") as f:
+        f.write(''.join(f"{k}={v}\n" for k,v in config.items()))
+    
+
+def main():
+    exe = pathlib.Path(sys.argv[0]).name
+    parser = argparse.ArgumentParser(
+        prog=exe,
+        description=(
+            f"{exe} parses ini config files generating "
+            "Makefile and C include style configuration"
+        ),
+    )
+
+    parser.add_argument(
+        "-c",
+        "--config-file",
+        nargs="+",
+        help="One or more configuration files",
+        required=True,
+    )
+    parser.add_argument(
+        "-o", "--output-directory", help="Output directory", required=True
+    )
+
+    args = parser.parse_args()
+    output_directory = pathlib.Path(args.output_directory)
+    flattened = {}
+    config = configparser.ConfigParser()
+    config.read(args.config_file)
+
+    for section, keyvals in config.items():
+        for k, v in keyvals.items():
+            flattened[f"CONFIG_{section}_{k}".upper().replace(".", "_")] = v
+
+    make_outpath = output_directory / MAKE_HEADER_NAME
+    include_outpath = output_directory / C_HEADER_NAME
+    write_c_header(include_outpath, flattened)
+    write_make_config(make_outpath, flattened)
+
+if __name__ == "__main__":
+    main()
